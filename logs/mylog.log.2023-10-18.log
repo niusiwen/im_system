@@ -1,0 +1,34 @@
+2023-10-18 23:04:23 -Starting ServiceApplication on DESKTOP-TKIAF79 with PID 137852 (E:\IdeaProjects\im_system\service\target\classes started by nsw in E:\IdeaProjects\im_system)
+2023-10-18 23:04:23 -The following profiles are active: dev
+2023-10-18 23:04:32 -Multiple Spring Data modules found, entering strict repository configuration mode!
+2023-10-18 23:04:32 -Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2023-10-18 23:04:33 -Finished Spring Data repository scanning in 69ms. Found 0 Redis repository interfaces.
+2023-10-18 23:04:36 -Tomcat initialized with port(s): 8000 (http)
+2023-10-18 23:04:36 -Initializing ProtocolHandler ["http-nio-8000"]
+2023-10-18 23:04:36 -Starting service [Tomcat]
+2023-10-18 23:04:36 -Starting Servlet engine: [Apache Tomcat/9.0.37]
+2023-10-18 23:04:37 -Initializing Spring embedded WebApplicationContext
+2023-10-18 23:04:37 -Root WebApplicationContext: initialization completed in 13156 ms
+2023-10-18 23:04:43 -Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'imGroupController': Unsatisfied dependency expressed through field 'groupService'; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'imGroupServiceImpl': Unsatisfied dependency expressed through field 'imGroupDataMapper'; nested exception is org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'com.nsw.im.service.group.dao.mapper.ImGroupMapper' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {@org.springframework.beans.factory.annotation.Autowired(required=true)}
+2023-10-18 23:04:43 -Stopping service [Tomcat]
+2023-10-18 23:04:43 -
+
+Error starting ApplicationContext. To display the conditions report re-run your application with 'debug' enabled.
+2023-10-18 23:04:43 -
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Field imGroupDataMapper in com.nsw.im.service.group.service.impl.ImGroupServiceImpl required a bean of type 'com.nsw.im.service.group.dao.mapper.ImGroupMapper' that could not be found.
+
+The injection point has the following annotations:
+	- @org.springframework.beans.factory.annotation.Autowired(required=true)
+
+
+Action:
+
+Consider defining a bean of type 'com.nsw.im.service.group.dao.mapper.ImGroupMapper' in your configuration.
+

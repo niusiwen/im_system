@@ -1,0 +1,42 @@
+
+spring:
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/nsw-im?serverTimezone=UTC&useSSL=false&characterEncoding=UTF8
+    username: root
+    password: niu123456
+
+
+appConfig:
+  #appId: 10000
+  #privateKey: 123456
+  zkAddr: 127.0.0.1:2181 # zk连接地址
+  zkConnectTimeOut: 50000 #zk超时时间
+  imRouteWay: 3 #路由策略：1随机 2轮询 3hash
+  consistentHashWay: 1  # 如果选用一致性hash算法: 1 TreeMap 2 自定义Map
+  callbackUrl:         #回调地址
+  modifyUserAfterCallback: false  # 用户资料变更之后的回调
+
+
+# logger 配置
+logging:
+  config: classpath:logback-spring.xml
+
+server:
+  port: 8000
+
+
+
+mybatis-plus:
+
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath*:mapper/*.xml
+  global-config:
+    db-config:
+      update-strategy: NOT_EMPTY
+
+#mybatis:
+#  configuration:
