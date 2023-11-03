@@ -81,10 +81,10 @@ public class ImFriendShipController {
         return imFriendShipService.deleteBlack(req);
     }
 
-    @RequestMapping("/checkBlck")
-    public ResponseVO checkBlck(@RequestBody @Validated CheckFriendShipReq req, Integer appId){
+    @RequestMapping("/checkBlack")
+    public ResponseVO checkBlack(@RequestBody @Validated CheckFriendShipReq req, Integer appId){
         req.setAppId(appId);
-        return imFriendShipService.checkBlck(req);
+        return imFriendShipService.checkBlack(req);
     }
 
 

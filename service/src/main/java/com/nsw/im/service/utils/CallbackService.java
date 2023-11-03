@@ -35,7 +35,7 @@ public class CallbackService {
     public void callback(Integer appId, String callbackCommand, String jsonBody) {
 
         try {
-            httpRequestUtils.doPost("", Object.class, builderUrlParams(appId, callbackCommand),
+            httpRequestUtils.doPost(appConfig.getCallbackUrl(), Object.class, builderUrlParams(appId, callbackCommand),
                     jsonBody, null);
         } catch (Exception e) {
             // e.printStackTrace();
@@ -52,7 +52,7 @@ public class CallbackService {
     public ResponseVO beforeCallback(Integer appId, String callbackCommand, String jsonBody) {
 
         try {
-            ResponseVO responseVO = httpRequestUtils.doPost("", ResponseVO.class, builderUrlParams(appId, callbackCommand),
+            ResponseVO responseVO = httpRequestUtils.doPost(appConfig.getCallbackUrl(), ResponseVO.class, builderUrlParams(appId, callbackCommand),
                     jsonBody, null);
             return responseVO;
         } catch (Exception e) {

@@ -10,7 +10,8 @@ import org.apache.ibatis.annotations.Select;
 import java.util.List;
 
 /**
- *
+ * @author nsw
+ * @date 2023/11/2 23:07
  */
 @Mapper
 public interface ImFriendShipMapper extends BaseMapper<ImFriendShipEntity> {

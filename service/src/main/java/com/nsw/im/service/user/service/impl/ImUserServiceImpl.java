@@ -3,6 +3,7 @@ package com.nsw.im.service.user.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.nsw.im.common.ResponseVO;
+import com.nsw.im.common.config.AppConfig;
 import com.nsw.im.common.constant.Constants;
 import com.nsw.im.common.enums.DelFlagEnum;
 import com.nsw.im.common.enums.UserErrorCode;
@@ -13,6 +14,7 @@ import com.nsw.im.service.user.model.req.*;
 import com.nsw.im.service.user.model.resp.GetUserInfoResp;
 import com.nsw.im.service.user.model.resp.ImportUserResp;
 import com.nsw.im.service.user.service.ImUserService;
+import com.nsw.im.service.utils.CallbackService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -36,6 +38,12 @@ public class ImUserServiceImpl implements ImUserService {
 
     @Autowired
     StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    CallbackService callbackService;
+
+    @Autowired
+    AppConfig appConfig;
 
     @Override
     public ResponseVO importUser(ImportUserReq req) {
@@ -162,17 +170,19 @@ public class ImUserServiceImpl implements ImUserService {
         update.setUserId(null);
         int update1 = imUserDataMapper.update(update, query);
         if(update1 == 1){
-            //
+            // 通知
 //            UserModifyPack pack = new UserModifyPack();
 //            BeanUtils.copyProperties(req,pack);
 //            messageProducer.sendToUser(req.getUserId(),req.getClientType(),req.getImei(),
 //                    UserEventCommand.USER_MODIFY,pack,req.getAppId());
-//
-//            if(appConfig.isModifyUserAfterCallback()){
-//                callbackService.callback(req.getAppId(),
-//                        Constants.CallbackCommand.ModifyUserAfter,
-//                        JSONObject.toJSONString(req));
-//            }
+
+
+            // 更新成功之后进行回调  根据配置是否回调
+            if(appConfig.isModifyUserAfterCallback()){
+                callbackService.callback(req.getAppId(),
+                        Constants.CallbackCommand.ModifyUserAfter,
+                        JSONObject.toJSONString(req));
+            }
             return ResponseVO.successResponse();
         }
         throw new ApplicationException(UserErrorCode.MODIFY_USER_ERROR);

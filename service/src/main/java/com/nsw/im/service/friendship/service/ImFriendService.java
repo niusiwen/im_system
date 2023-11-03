@@ -12,7 +12,6 @@ import java.util.List;
  * @author nsw
  * @date 2023/8/12 9:51
  */
-@Service
 public interface ImFriendService {
 
     /**
@@ -42,7 +41,7 @@ public interface ImFriendService {
 
     public ResponseVO deleteBlack(DeleteBlackReq req);
 
-    public ResponseVO checkBlck(CheckFriendShipReq req);
+    public ResponseVO checkBlack(CheckFriendShipReq req);
 
     // public ResponseVO syncFriendshipList(SyncReq req);
 
