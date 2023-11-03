@@ -15,6 +15,11 @@ public interface ImGroupMemberService {
 
     public ResponseVO importGroupMember(ImportGroupMemberReq req);
 
+    /**
+     * 添加群成员
+     * @param req
+     * @return
+     */
     public ResponseVO addMember(AddGroupMemberReq req);
 
     public ResponseVO removeMember(RemoveGroupMemberReq req);

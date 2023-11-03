@@ -1,9 +1,11 @@
 package com.nsw.im.service.group.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.nsw.im.common.ResponseVO;
+import com.nsw.im.common.config.AppConfig;
 import com.nsw.im.common.constant.Constants;
 import com.nsw.im.common.enums.GroupErrorCode;
 import com.nsw.im.common.enums.GroupMemberRoleEnum;
@@ -12,12 +14,14 @@ import com.nsw.im.common.enums.GroupTypeEnum;
 import com.nsw.im.common.exception.ApplicationException;
 import com.nsw.im.service.group.dao.ImGroupEntity;
 import com.nsw.im.service.group.dao.mapper.ImGroupMapper;
+import com.nsw.im.service.group.model.callback.DestroyGroupCallbackDto;
 import com.nsw.im.service.group.model.req.*;
 import com.nsw.im.service.group.model.resp.GetGroupResp;
 import com.nsw.im.service.group.model.resp.GetJoinedGroupResp;
 import com.nsw.im.service.group.model.resp.GetRoleInGroupResp;
 import com.nsw.im.service.group.service.ImGroupMemberService;
 import com.nsw.im.service.group.service.ImGroupService;
+import com.nsw.im.service.utils.CallbackService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,11 +46,11 @@ public class ImGroupServiceImpl implements ImGroupService {
     @Autowired
     ImGroupMemberService groupMemberService;
 
-//    @Autowired
-//    AppConfig appConfig;
+    @Autowired
+    AppConfig appConfig;
 
-//    @Autowired
-//    CallbackService callbackService;
+    @Autowired
+    CallbackService callbackService;
 
 //    @Autowired
 //    GroupMessageProducer groupMessageProducer;
@@ -138,10 +142,11 @@ public class ImGroupServiceImpl implements ImGroupService {
             groupMemberService.addGroupMember(req.getGroupId(), req.getAppId(), dto);
         }
 
-//        if(appConfig.isCreateGroupAfterCallback()){
-//            callbackService.callback(req.getAppId(), Constants.CallbackCommand.CreateGroupAfter,
-//                    JSONObject.toJSONString(imGroupEntity));
-//        }
+        //创建群组之后的回调
+        if(appConfig.isCreateGroupAfterCallback()){
+            callbackService.callback(req.getAppId(), Constants.CallbackCommand.CreateGroupAfter,
+                    JSONObject.toJSONString(imGroupEntity));
+        }
 
 //        CreateGroupPack createGroupPack = new CreateGroupPack();
 //        BeanUtils.copyProperties(imGroupEntity, createGroupPack);
@@ -206,10 +211,11 @@ public class ImGroupServiceImpl implements ImGroupService {
             throw new ApplicationException(GroupErrorCode.THIS_OPERATE_NEED_MANAGER_ROLE);
         }
 
-//        if(appConfig.isModifyGroupAfterCallback()){
-//            callbackService.callback(req.getAppId(),Constants.CallbackCommand.UpdateGroupAfter,
-//                    JSONObject.toJSONString(imGroupDataMapper.selectOne(query)));
-//        }
+        //更新群组之后的回调
+        if(appConfig.isModifyGroupAfterCallback()){
+            callbackService.callback(req.getAppId(),Constants.CallbackCommand.UpdateGroupAfter,
+                    JSONObject.toJSONString(imGroupDataMapper.selectOne(query)));
+        }
 
 //        UpdateGroupInfoPack pack = new UpdateGroupInfoPack();
 //        BeanUtils.copyProperties(req, pack);
@@ -307,13 +313,13 @@ public class ImGroupServiceImpl implements ImGroupService {
             throw new ApplicationException(GroupErrorCode.UPDATE_GROUP_BASE_INFO_ERROR);
         }
 
-//        if(appConfig.isModifyGroupAfterCallback()){
-//            DestroyGroupCallbackDto dto = new DestroyGroupCallbackDto();
-//            dto.setGroupId(req.getGroupId());
-//            callbackService.callback(req.getAppId()
-//                    ,Constants.CallbackCommand.DestoryGroupAfter,
-//                    JSONObject.toJSONString(dto));
-//        }
+        if(appConfig.isModifyGroupAfterCallback()){
+            DestroyGroupCallbackDto dto = new DestroyGroupCallbackDto();
+            dto.setGroupId(req.getGroupId());
+            callbackService.callback(req.getAppId()
+                    ,Constants.CallbackCommand.DestoryGroupAfter,
+                    JSONObject.toJSONString(dto));
+        }
 //
 //        DestroyGroupPack pack = new DestroyGroupPack();
 //        pack.setSequence(seq);
