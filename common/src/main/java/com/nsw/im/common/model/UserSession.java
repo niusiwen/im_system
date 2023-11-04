@@ -40,4 +40,6 @@ public class UserSession {
      * 服务ip
      */
     private String  brokerHost;
+
+    private String imei;
 }

@@ -8,6 +8,42 @@ spring:
     username: root
     password: niu123456
 
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    jedis:
+      pool:
+        max-active: 100
+        max-idle: 100
+        max-wait: 1000
+        min-idle: 10
+    password:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    addresses: localhost
+    username: guest
+    password: guest
+    #    virtual-host:
+    listener:
+      simple:
+        concurrency: 5
+        max-concurrency: 10
+        acknowledge-mode: MANUAL
+        prefetch: 1
+    publisher-confirms: true
+    publisher-returns: true
+    template:
+      mandatory: true
+    cache:
+      connection:
+        mode: channel
+      channel:
+        size: 36
+        checkout-timeout: 0
+  application:
+    name: im-core
+
 
 appConfig:
   #appId: 10000
@@ -58,3 +94,12 @@ mybatis-plus:
 
 #mybatis:
 #  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+httpclient:
+  maxTotal:
+  defaultMaxPerRoute: 50
+  connectTimeout: 2000
+  connectionRequestTimeout: 2000
+  socketTimeout: 5000
+  staleConnectionCheckEnabled: true
