@@ -1,0 +1,48 @@
+.project
+.settings/
+HELP.md
+target/
+
+
+### Mac DS_Store files
+**/.DS_Store
+**/._.DS_Store
+
+### IntelliJ IDEA
+.idea
+*.iws
+*.iml
+*.ipr
+**/target/**
+
+### Java annotation processor (APT)
+*.factorypath
+
+.vscode
+.vscode/
+
+*.prefs
+*.project
+*.classpath
+*.versionsBackup
+
+### STS ###
+.apt_generated
+.settings
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+
+/logs/
+*.log
+*.log.gz
