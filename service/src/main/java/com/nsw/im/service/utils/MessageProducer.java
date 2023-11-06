@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- *
- *
+ * 给用户发送消息的工具类
  * @author nsw
  * @date 2023/11/3 22:26
  */
