@@ -6,6 +6,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nsw.im.codec.pack.group.AddGroupMemberPack;
+import com.nsw.im.codec.pack.group.GroupMemberSpeakPack;
+import com.nsw.im.codec.pack.group.RemoveGroupMemberPack;
+import com.nsw.im.codec.pack.group.UpdateGroupMemberPack;
 import com.nsw.im.common.ResponseVO;
 import com.nsw.im.common.config.AppConfig;
 import com.nsw.im.common.constant.Constants;
@@ -13,7 +17,9 @@ import com.nsw.im.common.enums.GroupErrorCode;
 import com.nsw.im.common.enums.GroupMemberRoleEnum;
 import com.nsw.im.common.enums.GroupStatusEnum;
 import com.nsw.im.common.enums.GroupTypeEnum;
+import com.nsw.im.common.enums.command.GroupEventCommand;
 import com.nsw.im.common.exception.ApplicationException;
+import com.nsw.im.common.model.ClientInfo;
 import com.nsw.im.service.group.dao.ImGroupEntity;
 import com.nsw.im.service.group.dao.ImGroupMemberEntity;
 import com.nsw.im.service.group.dao.mapper.ImGroupMemberMapper;
@@ -26,6 +32,7 @@ import com.nsw.im.service.group.service.ImGroupService;
 import com.nsw.im.service.user.dao.ImUserDataEntity;
 import com.nsw.im.service.user.service.ImUserService;
 import com.nsw.im.service.utils.CallbackService;
+import com.nsw.im.service.utils.GroupMessageProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -61,8 +68,8 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
     @Autowired
     ImUserService imUserService;
 
-//    @Autowired
-//    GroupMessageProducer groupMessageProducer;
+    @Autowired
+    GroupMessageProducer groupMessageProducer;
 
     @Override
     public ResponseVO importGroupMember(ImportGroupMemberReq req) {
@@ -312,11 +319,12 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
             resp.add(addMemberResp);
         }
 
-//        AddGroupMemberPack addGroupMemberPack = new AddGroupMemberPack();
-//        addGroupMemberPack.setGroupId(req.getGroupId());
-//        addGroupMemberPack.setMembers(successId);
-//        groupMessageProducer.producer(req.getOperater(), GroupEventCommand.ADDED_MEMBER, addGroupMemberPack
-//                , new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
+        // 添加群成员之后发送给群组的消息
+        AddGroupMemberPack addGroupMemberPack = new AddGroupMemberPack();
+        addGroupMemberPack.setGroupId(req.getGroupId());
+        addGroupMemberPack.setMembers(successId);
+        groupMessageProducer.producer(req.getOperater(), GroupEventCommand.ADDED_MEMBER, addGroupMemberPack
+                , new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
 
         // 添加群成员之后的回调
         if(appConfig.isAddGroupMemberAfterCallback()){
@@ -390,12 +398,12 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         }
         ResponseVO responseVO = groupMemberService.removeGroupMember(req.getGroupId(), req.getAppId(), req.getMemberId());
         if(responseVO.isOk()){
-
-//            RemoveGroupMemberPack removeGroupMemberPack = new RemoveGroupMemberPack();
-//            removeGroupMemberPack.setGroupId(req.getGroupId());
-//            removeGroupMemberPack.setMember(req.getMemberId());
-//            groupMessageProducer.producer(req.getMemberId(), GroupEventCommand.DELETED_MEMBER, removeGroupMemberPack
-//                    , new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
+            // 删除群成员之后发送给群组的消息
+            RemoveGroupMemberPack removeGroupMemberPack = new RemoveGroupMemberPack();
+            removeGroupMemberPack.setGroupId(req.getGroupId());
+            removeGroupMemberPack.setMember(req.getMemberId());
+            groupMessageProducer.producer(req.getMemberId(), GroupEventCommand.DELETED_MEMBER, removeGroupMemberPack
+                    , new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
             // 删除群成员之后的回调
             if(appConfig.isDeleteGroupMemberAfterCallback()){
                 callbackService.callback(req.getAppId(),
@@ -496,15 +504,15 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
             update.setRole(req.getRole());
         }
 
-//        UpdateWrapper<ImGroupMemberEntity> objectUpdateWrapper = new UpdateWrapper<>();
-//        objectUpdateWrapper.eq("app_id", req.getAppId());
-//        objectUpdateWrapper.eq("member_id", req.getMemberId());
-//        objectUpdateWrapper.eq("group_id", req.getGroupId());
-//        imGroupMemberMapper.update(update, objectUpdateWrapper);
+        UpdateWrapper<ImGroupMemberEntity> objectUpdateWrapper = new UpdateWrapper<>();
+        objectUpdateWrapper.eq("app_id", req.getAppId());
+        objectUpdateWrapper.eq("member_id", req.getMemberId());
+        objectUpdateWrapper.eq("group_id", req.getGroupId());
+        imGroupMemberMapper.update(update, objectUpdateWrapper);
 //
-//        UpdateGroupMemberPack pack = new UpdateGroupMemberPack();
-//        BeanUtils.copyProperties(req, pack);
-//        groupMessageProducer.producer(req.getOperater(), GroupEventCommand.UPDATED_MEMBER, pack, new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
+        UpdateGroupMemberPack pack = new UpdateGroupMemberPack();
+        BeanUtils.copyProperties(req, pack);
+        groupMessageProducer.producer(req.getOperater(), GroupEventCommand.UPDATED_MEMBER, pack, new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
 
 
         return ResponseVO.successResponse();
@@ -602,10 +610,11 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
 
         int i = imGroupMemberMapper.updateById(imGroupMemberEntity);
         if(i == 1){
-//            GroupMemberSpeakPack pack = new GroupMemberSpeakPack();
-//            BeanUtils.copyProperties(req,pack);
-//            groupMessageProducer.producer(req.getOperater(),GroupEventCommand.SPEAK_GOUP_MEMBER,pack,
-//                    new ClientInfo(req.getAppId(),req.getClientType(),req.getImei()));
+            // 禁言群成员之后给群组发送消息
+            GroupMemberSpeakPack pack = new GroupMemberSpeakPack();
+            BeanUtils.copyProperties(req,pack);
+            groupMessageProducer.producer(req.getOperater(),GroupEventCommand.SPEAK_GOUP_MEMBER,pack,
+                    new ClientInfo(req.getAppId(),req.getClientType(),req.getImei()));
         }
         return ResponseVO.successResponse();
     }

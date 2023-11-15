@@ -22,6 +22,11 @@ public interface ImGroupMemberService {
      */
     public ResponseVO addMember(AddGroupMemberReq req);
 
+    /**
+     * 移除群成员
+     * @param req
+     * @return
+     */
     public ResponseVO removeMember(RemoveGroupMemberReq req);
 
     public ResponseVO addGroupMember(String groupId, Integer appId, GroupMemberDto dto);
@@ -38,10 +43,27 @@ public interface ImGroupMemberService {
 
     public List<GroupMemberDto> getGroupManager(String groupId, Integer appId);
 
+    /**
+     * 修改群成员信息
+     * @param req
+     * @return
+     */
     public ResponseVO updateGroupMember(UpdateGroupMemberReq req);
 
+    /**
+     * 转移群主
+     * @param owner
+     * @param groupId
+     * @param appId
+     * @return
+     */
     public ResponseVO transferGroupMember(String owner, String groupId, Integer appId);
 
+    /**
+     * 禁言 群成员
+     * @param req
+     * @return
+     */
     public ResponseVO speak(SpeaMemberReq req);
 
     ResponseVO<Collection<String>> syncMemberJoinedGroup(String operater, Integer appId);
