@@ -2,6 +2,7 @@ package com.nsw.im.service.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.nsw.im.codec.proto.MessagePack;
+import com.nsw.im.common.constant.Constants;
 import com.nsw.im.common.enums.command.Command;
 import com.nsw.im.common.model.ClientInfo;
 import com.nsw.im.common.model.UserSession;
@@ -32,10 +33,15 @@ public class MessageProducer {
     @Autowired
     UserSessionUtils userSessionUtils;
 
+    /**
+     * 队列名称
+     */
+    private String queueName = Constants.RabbitConstants.MessageService2Im;
+
     public boolean sendMessage(UserSession session, Object msg) {
         try {
             logger.info("send message =="+ msg);
-            rabbitTemplate.convertAndSend("", session.getBrokerId()+"", msg );
+            rabbitTemplate.convertAndSend(queueName, session.getBrokerId()+"", msg );
             return true;
         } catch (Exception e) {
             logger.error("send error :" + e.getMessage());

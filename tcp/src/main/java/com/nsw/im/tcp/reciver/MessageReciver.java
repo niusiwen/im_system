@@ -1,6 +1,10 @@
 package com.nsw.im.tcp.reciver;
 
+import com.alibaba.fastjson.JSONObject;
+import com.nsw.im.codec.proto.MessagePack;
 import com.nsw.im.common.constant.Constants;
+import com.nsw.im.tcp.reciver.process.BaseProcess;
+import com.nsw.im.tcp.reciver.process.ProcessFactory;
 import com.nsw.im.tcp.utils.MqFactory;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -54,11 +58,24 @@ public class MessageReciver {
                         public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                             // super.handleDelivery(consumerTag, envelope, properties, body);
                             // todo 处理消息服务发来的消息
-                            String msgStr = new String(body);
-
-
-
-                            log.info(msgStr);
+                            try {
+                                String msgStr = new String(body);
+                                MessagePack pack = JSONObject.parseObject(msgStr, MessagePack.class);
+                                // 拿到处理器对象
+                                BaseProcess messageProcess = ProcessFactory.getMessageProcess(pack.getCommand());
+                                messageProcess.process(pack);
+                                log.info(msgStr);
+                                // 确认消息被消费
+                                /**
+                                 * 第一个参数：消息的标记符
+                                 * 第二个参数：消息是否是批量提交
+                                 */
+                                channel.basicAck(envelope.getDeliveryTag(), false);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                // 前两个参数与basicAck方法一样，第三个参数是否重回队列
+                                channel.basicNack(envelope.getDeliveryTag(), false, false);
+                            }
 
                         }
                     });

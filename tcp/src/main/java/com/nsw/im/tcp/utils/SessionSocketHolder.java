@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * NioSocketChannel的工具类
  * @author nsw
  * @date 2023/9/29 17:42
  */
