@@ -47,7 +47,7 @@ spring:
 
 appConfig:
   #appId: 10000
-  #privateKey: 123456
+  privateKey: 123456    # 接口密钥
   zkAddr: 127.0.0.1:2181 # zk连接地址
   zkConnectTimeOut: 50000 #zk超时时间
   imRouteWay: 3 #路由策略：1随机 2轮询 3hash
