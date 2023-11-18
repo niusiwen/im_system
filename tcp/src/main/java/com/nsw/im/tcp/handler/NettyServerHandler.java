@@ -10,6 +10,7 @@ import com.nsw.im.common.enums.ImConnectStatusEnum;
 import com.nsw.im.common.enums.command.SystemCommand;
 import com.nsw.im.common.model.UserClientDto;
 import com.nsw.im.common.model.UserSession;
+import com.nsw.im.tcp.publish.MqMessageProducer;
 import com.nsw.im.tcp.redis.RedisManager;
 import com.nsw.im.tcp.server.ImServer;
 import com.nsw.im.tcp.utils.SessionSocketHolder;
@@ -120,6 +121,9 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             channelHandlerContext.channel()
                     .attr(AttributeKey.valueOf(Constants.ReadTime)).set(System.currentTimeMillis());
 
+        } else {
+            // 发送mq消息到逻辑层
+            MqMessageProducer.sendMessage(message, command);
         }
 
     }

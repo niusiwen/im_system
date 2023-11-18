@@ -52,6 +52,8 @@ appConfig:
   zkConnectTimeOut: 50000 #zk超时时间
   imRouteWay: 3 #路由策略：1随机 2轮询 3hash
   consistentHashWay: 1  # 如果选用一致性hash算法: 1 TreeMap 2 自定义Map
+  sendMessageCheckFriend: true   #发送消息是否校验关系链
+  sendMessageCheckBlack: true  #发送消息是否校验黑名单
   callbackUrl:         #回调地址
   modifyUserAfterCallback: false  # 用户资料变更之后的回调
   addFriendAfterCallback: false # 添加好友之后回调开关
