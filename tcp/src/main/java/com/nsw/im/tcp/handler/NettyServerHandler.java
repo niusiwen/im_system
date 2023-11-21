@@ -4,16 +4,27 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.nsw.im.codec.pack.LoginPack;
+import com.nsw.im.codec.pack.message.ChatMessageAck;
 import com.nsw.im.codec.proto.Message;
+import com.nsw.im.codec.proto.MessagePack;
+import com.nsw.im.common.ResponseVO;
 import com.nsw.im.common.constant.Constants;
 import com.nsw.im.common.enums.ImConnectStatusEnum;
+import com.nsw.im.common.enums.command.GroupEventCommand;
+import com.nsw.im.common.enums.command.MessageCommand;
 import com.nsw.im.common.enums.command.SystemCommand;
 import com.nsw.im.common.model.UserClientDto;
 import com.nsw.im.common.model.UserSession;
+import com.nsw.im.common.model.message.CheckSendMessageReq;
+import com.nsw.im.tcp.feign.FeignMessageService;
 import com.nsw.im.tcp.publish.MqMessageProducer;
 import com.nsw.im.tcp.redis.RedisManager;
 import com.nsw.im.tcp.server.ImServer;
 import com.nsw.im.tcp.utils.SessionSocketHolder;
+import feign.Feign;
+import feign.Request;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -37,8 +48,17 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
 
     private Integer brokerId;
 
-    public NettyServerHandler(Integer brokerId) {
+    private String logicUrl;
+
+    private FeignMessageService feignMessageService;
+
+    public NettyServerHandler(Integer brokerId ,String logicUrl) {
         this.brokerId = brokerId;
+        feignMessageService = Feign.builder()
+                .encoder(new JacksonEncoder())
+                .decoder(new JacksonDecoder())
+                .options(new Request.Options(1000, 3500))//设置超时时间
+                .target(FeignMessageService.class, logicUrl);
     }
 
     @Override
@@ -80,7 +100,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             RMap<String, String> map = redissonClient.getMap(message.getMessageHeader().getAppId()
                     + Constants.RedisConstants.UserSessionConstants
                     + loginPack.getUserId());
-            map.put(message.getMessageHeader().getClientType() + "：" + message.getMessageHeader().getImei(),
+            map.put(message.getMessageHeader().getClientType() + ":" + message.getMessageHeader().getImei(),
                     JSONObject.toJSONString(userSession));
 
             SessionSocketHolder
@@ -121,7 +141,48 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             channelHandlerContext.channel()
                     .attr(AttributeKey.valueOf(Constants.ReadTime)).set(System.currentTimeMillis());
 
-        } else {
+        }
+//        else if (command == MessageCommand.MSG_P2P.getCommand()
+//                || command == GroupEventCommand.MSG_GROUP.getCommand()) {
+//            //
+//            try {
+//                String toId = "";
+//                CheckSendMessageReq req = new CheckSendMessageReq();
+//                req.setAppId(message.getMessageHeader().getAppId());
+//                req.setCommand(message.getMessageHeader().getCommand());
+//                JSONObject jsonObject = JSON.parseObject(JSONObject.toJSONString(message.getMessagePack()));
+//                String fromId = jsonObject.getString("fromId");
+//                if(command == MessageCommand.MSG_P2P.getCommand()){
+//                    toId = jsonObject.getString("toId");
+//                }else {
+//                    toId = jsonObject.getString("groupId");
+//                }
+//                req.setToId(toId);
+//                req.setFromId(fromId);
+//
+//                ResponseVO responseVO = feignMessageService.checkSendMessage(req);
+//                if(responseVO.isOk()){
+//                    MqMessageProducer.sendMessage(message, command);
+//                }else{
+//                    Integer ackCommand = 0;
+//                    if(command == MessageCommand.MSG_P2P.getCommand()){
+//                        ackCommand = MessageCommand.MSG_ACK.getCommand();
+//                    }else {
+//                        ackCommand = GroupEventCommand.GROUP_MSG_ACK.getCommand();
+//                    }
+//
+//                    ChatMessageAck chatMessageAck = new ChatMessageAck(jsonObject.getString("messageId"));
+//                    responseVO.setData(chatMessageAck);
+//                    MessagePack<ResponseVO> ack = new MessagePack<>();
+//                    ack.setData(responseVO);
+//                    ack.setCommand(ackCommand);
+//                    channelHandlerContext.channel().writeAndFlush(ack);
+//                }
+//            }catch (Exception e){
+//                e.printStackTrace();
+//            }
+//        }
+        else {
             // 发送mq消息到逻辑层
             MqMessageProducer.sendMessage(message, command);
         }

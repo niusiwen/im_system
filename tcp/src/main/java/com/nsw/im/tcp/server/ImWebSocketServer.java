@@ -1,6 +1,9 @@
 package com.nsw.im.tcp.server;
 
+import com.nsw.im.codec.WebSocketMessageDecoder;
+import com.nsw.im.codec.WebSocketMessageEncoder;
 import com.nsw.im.codec.config.BootstrapConfig;
+import com.nsw.im.tcp.handler.NettyServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -58,9 +61,9 @@ public class ImWebSocketServer {
                          * 对于websocket来讲，都是以frames进行传输的，不同的数据类型对应的frames也不同
                          */
                         pipeline.addLast(new WebSocketServerProtocolHandler("/ws"));
-//                        pipeline.addLast(new WebSocketMessageDecoder());
-//                        pipeline.addLast(new WebSocketMessageEncoder());
-//                        pipeline.addLast(new NettyServerHandler(config.getBrokerId(),config.getLogicUrl()));
+                        pipeline.addLast(new WebSocketMessageDecoder());
+                        pipeline.addLast(new WebSocketMessageEncoder());
+                        pipeline.addLast(new NettyServerHandler(config.getBrokerId(), config.getLogicUrl()));
                     }
                 });
 

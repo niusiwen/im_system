@@ -2,14 +2,15 @@ package com.nsw.im.service.group.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.nsw.im.service.group.dao.ImGroupEntity;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 
-@Repository
-public interface
-ImGroupMapper extends BaseMapper<ImGroupEntity> {
+//@Repository
+@Mapper
+public interface ImGroupMapper extends BaseMapper<ImGroupEntity> {
 
     /**
      * @description 获取加入的群的最大seq

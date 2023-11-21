@@ -29,8 +29,13 @@ public class MessageReciver {
         try {
             Channel channel = MqFactory
                     .getChannel(Constants.RabbitConstants.MessageService2Im + brokerId);
+
             /**
-             * 1、channel绑定队列
+             * 声明交换机，
+             */
+             channel.exchangeDeclare(Constants.RabbitConstants.MessageService2Im, "topic", true, false, false, null);
+            /**
+             * 1、channel声明队列
              * 第一个参数：queueName
              * 第二个参数：是否持久化
              * 第三个参数：独占，一般为false
@@ -40,7 +45,7 @@ public class MessageReciver {
             channel.queueDeclare(Constants.RabbitConstants.MessageService2Im + brokerId,
                     true, false, false, null);
             /**
-             * 2、channel绑定转换机
+             * 2、channel绑定转换机和队列
              * 参数1：queueName
              * 参数2：exchangeName
              * 参数3：routingKey

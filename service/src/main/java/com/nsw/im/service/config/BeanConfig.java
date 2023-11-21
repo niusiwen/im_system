@@ -7,6 +7,7 @@ import com.nsw.im.common.route.RouteHandle;
 import com.nsw.im.common.route.algorithm.consistenthash.AbstractConsistentHash;
 import com.nsw.im.common.route.algorithm.consistenthash.ConsistentHashHandle;
 import com.nsw.im.common.route.algorithm.consistenthash.TreeMapConsistentHash;
+import com.nsw.im.service.utils.SnowflakeIdWorker;
 import org.I0Itec.zkclient.ZkClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -58,4 +59,15 @@ public class BeanConfig {
 
         return routeHandle;
     }
+
+    @Bean
+    public EasySqlInjector easySqlInjector () {
+        return new EasySqlInjector();
+    }
+
+    @Bean
+    public SnowflakeIdWorker buildSnowflakeSeq() throws Exception {
+        return new SnowflakeIdWorker(0);
+    }
+
 }

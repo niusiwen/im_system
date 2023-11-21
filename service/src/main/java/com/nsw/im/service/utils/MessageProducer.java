@@ -38,15 +38,22 @@ public class MessageProducer {
      */
     private String queueName = Constants.RabbitConstants.MessageService2Im;
 
+    /**
+     * 服务端发送mq消息
+     * @param session
+     * @param msg
+     * @return
+     */
     public boolean sendMessage(UserSession session, Object msg) {
         try {
             logger.info("send message =="+ msg);
+            // 参数1 exchangeName
             rabbitTemplate.convertAndSend(queueName, session.getBrokerId()+"", msg );
             return true;
         } catch (Exception e) {
             logger.error("send error :" + e.getMessage());
+            return false;
         }
-        return false;
     }
 
     /**

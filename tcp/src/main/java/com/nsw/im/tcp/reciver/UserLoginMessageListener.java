@@ -47,8 +47,8 @@ public class UserLoginMessageListener {
                 for(NioSocketChannel nioSocketChannel : nioSocketChannels){
                     if (loginModel == DeviceMultiLoginEnum.ONE.getLoginMode()) {
                         /* 单端登录 */
-                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.newInstance(Constants.ClientType)).get();
-                        String imei = (String) nioSocketChannel.attr(AttributeKey.newInstance(Constants.Imei)).get();
+                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.ClientType)).get();
+                        String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
 
                         if(!(clientType+":"+imei).equals(userClientDto.getClientType()+":"+userClientDto.getImei())) {
                             // todo 不相等要踢掉客户端
@@ -59,8 +59,8 @@ public class UserLoginMessageListener {
                              * 让客户端通知服务端断开连接
                              */
                             MessagePack<Object> pack = new MessagePack<>();
-                            pack.setToId((String)nioSocketChannel.attr(AttributeKey.newInstance(Constants.UserId)).get());
-                            pack.setUserId((String)nioSocketChannel.attr(AttributeKey.newInstance(Constants.UserId)).get());
+                            pack.setToId((String)nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
+                            pack.setUserId((String)nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
                             pack.setCommand(SystemCommand.MUTUALLOGIN.getCommand());
                             //  把pack写回去
                             nioSocketChannel.writeAndFlush(pack);
@@ -76,16 +76,16 @@ public class UserLoginMessageListener {
                         }
 
                         // 判断当前端是否是web端，是的话也不做处理
-                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.newInstance(Constants.ClientType)).get();
+                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.ClientType)).get();
                         if (clientType == ClientType.WEB.getCode()) {
                             continue;
                         }
-                        String imei = (String) nioSocketChannel.attr(AttributeKey.newInstance(Constants.Imei)).get();
+                        String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
                         if(!(clientType+":"+imei).equals(userClientDto.getClientType()+":"+userClientDto.getImei())) {
                             // todo 不相等要踢掉客户端
                             MessagePack<Object> pack = new MessagePack<>();
-                            pack.setToId((String)nioSocketChannel.attr(AttributeKey.newInstance(Constants.UserId)).get());
-                            pack.setUserId((String)nioSocketChannel.attr(AttributeKey.newInstance(Constants.UserId)).get());
+                            pack.setToId((String)nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
+                            pack.setUserId((String)nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
                             pack.setCommand(SystemCommand.MUTUALLOGIN.getCommand());
                             //  把pack写回去
                             nioSocketChannel.writeAndFlush(pack);
@@ -95,8 +95,8 @@ public class UserLoginMessageListener {
 
                     } else if (loginModel == DeviceMultiLoginEnum.THREE.getLoginMode()) {
                         /*三端登录*/
-                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.newInstance(Constants.ClientType)).get();
-                        String imei = (String) nioSocketChannel.attr(AttributeKey.newInstance(Constants.Imei)).get();
+                        Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.ClientType)).get();
+                        String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
                         if(userClientDto.getClientType() == ClientType.WEB.getCode()) {
                             continue;
                         }
@@ -121,8 +121,8 @@ public class UserLoginMessageListener {
                         if(!(clientType+":"+imei).equals(userClientDto.getClientType()+":"+userClientDto.getImei())) {
                             // todo 不相等要踢掉客户端
                             MessagePack<Object> pack = new MessagePack<>();
-                            pack.setToId((String)nioSocketChannel.attr(AttributeKey.newInstance(Constants.UserId)).get());
-                            pack.setUserId((String)nioSocketChannel.attr(AttributeKey.newInstance(Constants.UserId)).get());
+                            pack.setToId((String)nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
+                            pack.setUserId((String)nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get());
                             pack.setCommand(SystemCommand.MUTUALLOGIN.getCommand());
                             //  把pack写回去
                             nioSocketChannel.writeAndFlush(pack);

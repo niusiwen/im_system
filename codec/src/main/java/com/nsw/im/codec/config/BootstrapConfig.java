@@ -66,6 +66,11 @@ public class BootstrapConfig {
          *
          */
         private Integer loginModel;
+
+        /**
+         * 逻辑层地址
+         */
+        private String logicUrl;
     }
 
     @Data

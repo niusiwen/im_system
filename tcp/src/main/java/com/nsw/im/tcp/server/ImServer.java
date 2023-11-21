@@ -52,7 +52,7 @@ public class ImServer {
                                  0,0,
                                  10));
                          socketChannel.pipeline().addLast(new HeartBeatHandler(config.getHeartBeatTime()));
-                         socketChannel.pipeline().addLast(new NettyServerHandler(config.getBrokerId()));
+                         socketChannel.pipeline().addLast(new NettyServerHandler(config.getBrokerId(), config.getLogicUrl()));
                     }
                 });
 

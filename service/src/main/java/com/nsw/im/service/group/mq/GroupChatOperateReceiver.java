@@ -1,10 +1,12 @@
-package com.nsw.im.service.message.mq;
+package com.nsw.im.service.group.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.nsw.im.common.constant.Constants;
+import com.nsw.im.common.enums.command.GroupEventCommand;
 import com.nsw.im.common.enums.command.MessageCommand;
-import com.nsw.im.common.model.message.MessageContent;
+import com.nsw.im.common.model.message.GroupChatMessageContent;
+import com.nsw.im.service.group.service.GroupMessageService;
 import com.nsw.im.service.message.service.P2PMessageService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -22,24 +24,27 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * 订阅从tcp服务投递过来的消息的接收器类
+ * 订阅从tcp服务投递过来的 群消息的接收器
  * @author nsw
  * @date 2023/11/16 22:55
  */
 @Component
 @Slf4j
-public class ChatOperateReceiver {
+public class GroupChatOperateReceiver {
+
+//    @Autowired
+//    P2PMessageService p2PMessageService;
 
     @Autowired
-    P2PMessageService p2PMessageService;
+    GroupMessageService groupMessageService;
 
     @RabbitListener(
             // 绑定交换机和消息队列
             bindings = @QueueBinding(
                     // 队列名，是否持久化
-                    value = @Queue(value = Constants.RabbitConstants.Im2MessageService, durable = "true" ),
-                    // 交换机名，是否持久化，没有配置type默认是direct类型
-                    exchange = @Exchange(value = Constants.RabbitConstants.Im2MessageService, durable = "true")
+                    value = @Queue(value = Constants.RabbitConstants.Im2GroupService, durable = "true" ),
+                    // 交换机名，是否持久化
+                    exchange = @Exchange(value = Constants.RabbitConstants.Im2GroupService, durable = "true")
             ),
             // 每次从队列中拉取多少消息
             concurrency = "1"
@@ -55,13 +60,15 @@ public class ChatOperateReceiver {
             JSONObject jsonObject = JSON.parseObject(msg);
             Integer command = jsonObject.getInteger("command");
 
-            if (command.equals(MessageCommand.MSG_P2P.getCommand())) {
-                // 处理消息
-                MessageContent messageContent = jsonObject.toJavaObject(MessageContent.class);
-                p2PMessageService.process(messageContent);
+            if (command.equals(GroupEventCommand.MSG_GROUP.getCommand())) {
+                // 处理群消息
+                GroupChatMessageContent messageContent = jsonObject.toJavaObject(GroupChatMessageContent.class);
+//                p2PMessageService.process(messageContent);
+
+                groupMessageService.process(messageContent);
 
             }
-            //处理完消息，ack确认
+            // 处理完消息，ack确认
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
             log.error("处理消息出现异常：{}", e.getMessage());

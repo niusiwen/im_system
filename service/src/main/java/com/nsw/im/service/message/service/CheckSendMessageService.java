@@ -6,6 +6,10 @@ import com.nsw.im.common.enums.*;
 import com.nsw.im.service.friendship.dao.ImFriendShipEntity;
 import com.nsw.im.service.friendship.model.req.GetRelationReq;
 import com.nsw.im.service.friendship.service.ImFriendService;
+import com.nsw.im.service.group.dao.ImGroupEntity;
+import com.nsw.im.service.group.model.resp.GetRoleInGroupResp;
+import com.nsw.im.service.group.service.ImGroupMemberService;
+import com.nsw.im.service.group.service.ImGroupService;
 import com.nsw.im.service.user.dao.ImUserDataEntity;
 import com.nsw.im.service.user.service.ImUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +27,12 @@ public class CheckSendMessageService {
 
     @Autowired
     ImFriendService imFriendService;
+    
+    @Autowired
+    ImGroupService imGroupService;
+
+    @Autowired
+    ImGroupMemberService imGroupMemberService;
 
     @Autowired
     AppConfig appConfig;
@@ -111,6 +121,48 @@ public class CheckSendMessageService {
             }
 
         }
+        return ResponseVO.successResponse();
+    }
+
+    /**
+     *
+     * @param fromId
+     * @param appId
+     * @return
+     */
+    public ResponseVO checkGroupMessage(String fromId, String groupId, Integer appId) {
+        // 判断发送方是否满足条件
+        ResponseVO responseVO = checkSenderForbidAndMute(fromId, appId);
+        if (!responseVO.isOk()) {
+            return responseVO;
+        }
+
+        // 判断群逻辑
+        ResponseVO<ImGroupEntity> group = imGroupService.getGroup(groupId, appId);
+        if (!group.isOk()) {
+            return group;
+        }
+
+        // 判断群成员是否在群里
+        ResponseVO<GetRoleInGroupResp> roleInGroupOne = imGroupMemberService.getRoleInGroupOne(groupId, fromId, appId);
+        if (!roleInGroupOne.isOk()) {
+            return roleInGroupOne;
+        }
+
+        // 判断群是否被禁言，如果禁言只有群管理和群主可以发言
+        ImGroupEntity groupData = group.getData();
+        GetRoleInGroupResp data = roleInGroupOne.getData();
+        if(groupData.getMute() == GroupMuteTypeEnum.MUTE.getCode()
+                && !(data.getRole() == GroupMemberRoleEnum.MAMAGER.getCode()
+                || data.getRole() == GroupMemberRoleEnum.OWNER.getCode())) {
+            return ResponseVO.errorResponse(GroupErrorCode.THIS_GROUP_IS_MUTE);
+        }
+
+        // 个人在群内是否被禁言
+        if (data.getSpeakDate() != null && data.getSpeakDate() > System.currentTimeMillis()) {
+            return ResponseVO.errorResponse(GroupErrorCode.GROUP_MEMBER_IS_SPEAK);
+        }
+
         return ResponseVO.successResponse();
     }
 
