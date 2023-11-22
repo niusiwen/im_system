@@ -1,7 +1,10 @@
 package com.nsw.im.service.message.service;
 
 import com.nsw.im.common.enums.DelFlagEnum;
+import com.nsw.im.common.model.message.GroupChatMessageContent;
 import com.nsw.im.common.model.message.MessageContent;
+import com.nsw.im.service.group.dao.ImGroupMessageHistoryEntity;
+import com.nsw.im.service.group.dao.mapper.ImGroupMessageHistoryMapper;
 import com.nsw.im.service.message.dao.ImMessageBodyEntity;
 import com.nsw.im.service.message.dao.ImMessageHistoryEntity;
 import com.nsw.im.service.message.dao.mapper.ImMessageBodyMapper;
@@ -30,6 +33,9 @@ public class MessageStoreService {
 
 //    @Autowired
 //    SnowflakeIdWorker snowflakeIdWorker;
+
+    @Autowired
+    ImGroupMessageHistoryMapper imGroupMessageHistoryMapper;
 
 
     @Transactional
@@ -80,6 +86,29 @@ public class MessageStoreService {
         list.add(fromHistory);
         list.add(toHistory);
         return list;
+    }
+
+
+    public void storeGroupMessage(GroupChatMessageContent messageContent) {
+        // messageContent 转化成 messageBody
+        ImMessageBodyEntity messageBodyEntity = extractMessageBody(messageContent);
+        // 插入messageBody
+        imMessageBodyMapper.insert(messageBodyEntity);
+        // 转化成messageHistory
+        ImGroupMessageHistoryEntity imGroupMessageHistoryEntity = extractToGroupMessageHistory(messageContent, messageBodyEntity);
+        imGroupMessageHistoryMapper.insert(imGroupMessageHistoryEntity);
+
+        messageContent.setMessageKey(messageBodyEntity.getMessageKey());
+    }
+
+    private ImGroupMessageHistoryEntity extractToGroupMessageHistory(GroupChatMessageContent messageContent,
+                                                                     ImMessageBodyEntity messageBodyEntity) {
+        ImGroupMessageHistoryEntity result = new ImGroupMessageHistoryEntity();
+        BeanUtils.copyProperties(messageContent, result);
+        result.setGroupId(messageContent.getFromId());
+        result.setMessageKey(messageBodyEntity.getMessageKey());
+        result.setCreateTime(System.currentTimeMillis());
+        return result;
     }
 
 

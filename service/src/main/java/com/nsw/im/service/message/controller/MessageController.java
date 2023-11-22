@@ -21,11 +21,11 @@ public class MessageController {
     @Autowired
     P2PMessageService p2PMessageService;
 
+    @RequestMapping("/importGroup")
     public ResponseVO send (@RequestBody @Validated SendMessageReq req,
                             Integer appId) {
         req.setAppId(appId);
-
-        return ResponseVO.successResponse();
+        return ResponseVO.successResponse(p2PMessageService.send(req));
 
     }
 

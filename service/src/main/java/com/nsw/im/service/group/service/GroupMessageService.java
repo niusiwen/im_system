@@ -6,9 +6,13 @@ import com.nsw.im.common.enums.command.GroupEventCommand;
 import com.nsw.im.common.enums.command.MessageCommand;
 import com.nsw.im.common.model.ClientInfo;
 import com.nsw.im.common.model.message.GroupChatMessageContent;
+import com.nsw.im.service.group.model.req.SendGroupMessageReq;
+import com.nsw.im.service.message.model.resp.SendMessageResp;
 import com.nsw.im.service.message.service.CheckSendMessageService;
+import com.nsw.im.service.message.service.MessageStoreService;
 import com.nsw.im.service.utils.MessageProducer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +35,9 @@ public class GroupMessageService {
     @Autowired
     ImGroupMemberService imGroupMemberService;
 
+    @Autowired
+    MessageStoreService messageStoreService;
+
     /**
      *
      * @param messageContent
@@ -45,6 +52,8 @@ public class GroupMessageService {
         // 发送方和接受方是否是好友(非绝对的，有些app不是好友也可以发)
         ResponseVO responseVO = isServerPermissCheck(fromId, toId, appId);
         if (responseVO.isOk()) {
+            // 存储群消息
+            messageStoreService.storeGroupMessage(messageContent);
             // 1、 回ack成功给自己（客户端） 表示服务端已经收到了
             ack(messageContent, responseVO);
             // 2、发消息给同步在线端
@@ -93,5 +102,22 @@ public class GroupMessageService {
     private ResponseVO isServerPermissCheck(String fromId, String toId, Integer appId){
         ResponseVO responseVO = checkSendMessageService.checkGroupMessage(fromId, toId, appId);
         return responseVO;
+    }
+
+    public SendMessageResp send(SendGroupMessageReq req) {
+        SendMessageResp resp = new SendMessageResp();
+        GroupChatMessageContent messageContent = new GroupChatMessageContent();
+        BeanUtils.copyProperties(req, messageContent);
+
+        // 存储群消息
+        messageStoreService.storeGroupMessage(messageContent);
+        resp.setMessageKey(messageContent.getMessageKey());
+        resp.setMessageTime(System.currentTimeMillis());
+
+        // 2、发消息给同步在线端
+        syncToSender(messageContent, messageContent);
+        // 3、发消息给对方在线端
+        dispatchMessage(messageContent);
+        return resp;
     }
 }
