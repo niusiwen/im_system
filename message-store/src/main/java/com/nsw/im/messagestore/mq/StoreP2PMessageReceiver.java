@@ -1,13 +1,11 @@
-package com.nsw.im.service.message.mq;
+package com.nsw.im.messagestore.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.nsw.im.common.constant.Constants;
-import com.nsw.im.common.enums.command.MessageCommand;
-import com.nsw.im.common.model.message.MessageContent;
-import com.nsw.im.common.model.message.MessageReceiveAckContent;
-import com.nsw.im.service.message.service.MessageSyncService;
-import com.nsw.im.service.message.service.P2PMessageService;
+import com.nsw.im.messagestore.dao.ImMessageBodyEntity;
+import com.nsw.im.messagestore.model.DoStoreP2PMessageDto;
+import com.nsw.im.messagestore.service.StoreMessageService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -19,32 +17,29 @@ import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
 /**
- * 订阅从tcp服务投递过来的消息的接收器类
  * @author nsw
- * @date 2023/11/16 22:55
+ * @date 2023/12/2 11:14
  */
-@Component
 @Slf4j
-public class ChatOperateReceiver {
+@Service
+public class StoreP2PMessageReceiver {
 
     @Autowired
-    P2PMessageService p2PMessageService;
+    StoreMessageService storeMessageService;
 
-    @Autowired
-    MessageSyncService messageSyncService;
 
     @RabbitListener(
             // 绑定交换机和消息队列
             bindings = @QueueBinding(
                     // 队列名，是否持久化
-                    value = @Queue(value = Constants.RabbitConstants.Im2MessageService, durable = "true" ),
+                    value = @Queue(value = Constants.RabbitConstants.StoreP2PMessage, durable = "true" ),
                     // 交换机名，是否持久化，没有配置type默认是direct类型
-                    exchange = @Exchange(value = Constants.RabbitConstants.Im2MessageService, durable = "true")
+                    exchange = @Exchange(value = Constants.RabbitConstants.StoreP2PMessage, durable = "true")
             ),
             // 每次从队列中拉取多少消息
             concurrency = "1"
@@ -58,20 +53,13 @@ public class ChatOperateReceiver {
         Long deliveryTag = (Long) headers.get(AmqpHeaders.DELIVERY_TAG);
         try {
             JSONObject jsonObject = JSON.parseObject(msg);
-            Integer command = jsonObject.getInteger("command");
 
-            if (command.equals(MessageCommand.MSG_P2P.getCommand())) {
-                // 处理消息
-                MessageContent messageContent = jsonObject.toJavaObject(MessageContent.class);
-                p2PMessageService.process(messageContent);
+            DoStoreP2PMessageDto doStoreP2PMessageDto = jsonObject.toJavaObject(DoStoreP2PMessageDto.class);
+            // 传入的是common包下的ImMessageBody，需要转成messageStore下的ImMessageBodyEntity
+            ImMessageBodyEntity messageBody = jsonObject.getObject("messageBody", ImMessageBodyEntity.class);
+            doStoreP2PMessageDto.setMessageBody(messageBody);
+            storeMessageService.doStoreP2PMessage(doStoreP2PMessageDto);
 
-            } else if(command.equals(MessageCommand.MSG_RECEIVE_ACK.getCommand())) {
-                //消息接收确认
-                MessageReceiveAckContent messageContent = jsonObject.toJavaObject(MessageReceiveAckContent.class);
-                messageSyncService.receiveMark(messageContent);
-
-            }
-            //处理完消息，ack确认
             channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
             log.error("处理消息出现异常：{}", e.getMessage());

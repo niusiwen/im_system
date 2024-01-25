@@ -82,7 +82,7 @@ public class MessageProducer {
      * @param command
      * @param data
      * @param appId
-     * @return
+     * @return List<ClientInfo>  发送完消息 返回发送成功的用户信息
      */
     public List<ClientInfo> sendToUser(String toId, Command command, Object data, Integer appId){
         List<UserSession> userSession = userSessionUtils.getUserSession(appId, toId);

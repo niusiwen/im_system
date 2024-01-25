@@ -30,6 +30,11 @@ public class BeanConfig {
         return new ZkClient(appConfig.getZkAddr(), appConfig.getZkConnectTimeOut());
     }
 
+    /**
+     * 负载均衡组件
+     * @return
+     * @throws Exception
+     */
     @Bean
     public RouteHandle routeHandle() throws Exception {
 //        return new RandomHandle();
@@ -60,11 +65,20 @@ public class BeanConfig {
         return routeHandle;
     }
 
+    /**
+     * 批量插入组件
+     * @return
+     */
     @Bean
     public EasySqlInjector easySqlInjector () {
         return new EasySqlInjector();
     }
 
+    /**
+     * 雪花算法组件
+     * @return
+     * @throws Exception
+     */
     @Bean
     public SnowflakeIdWorker buildSnowflakeSeq() throws Exception {
         return new SnowflakeIdWorker(0);

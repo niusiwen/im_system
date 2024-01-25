@@ -38,7 +38,7 @@ public class CheckSendMessageService {
     AppConfig appConfig;
 
     /**
-     * 校验发送方是否满足发送条件
+     * 校验发送方是否满足发送条件（是否被禁用，是否被禁言）
      * @param fromId
      * @param appId
      * @return
@@ -125,7 +125,7 @@ public class CheckSendMessageService {
     }
 
     /**
-     *
+     * 判断群消息的合法性
      * @param fromId
      * @param appId
      * @return
@@ -137,7 +137,7 @@ public class CheckSendMessageService {
             return responseVO;
         }
 
-        // 判断群逻辑
+        // 判断群逻辑 群是否存在
         ResponseVO<ImGroupEntity> group = imGroupService.getGroup(groupId, appId);
         if (!group.isOk()) {
             return group;

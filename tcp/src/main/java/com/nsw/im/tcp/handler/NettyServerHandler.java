@@ -142,46 +142,48 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
                     .attr(AttributeKey.valueOf(Constants.ReadTime)).set(System.currentTimeMillis());
 
         }
-//        else if (command == MessageCommand.MSG_P2P.getCommand()
-//                || command == GroupEventCommand.MSG_GROUP.getCommand()) {
-//            //
-//            try {
-//                String toId = "";
-//                CheckSendMessageReq req = new CheckSendMessageReq();
-//                req.setAppId(message.getMessageHeader().getAppId());
-//                req.setCommand(message.getMessageHeader().getCommand());
-//                JSONObject jsonObject = JSON.parseObject(JSONObject.toJSONString(message.getMessagePack()));
-//                String fromId = jsonObject.getString("fromId");
-//                if(command == MessageCommand.MSG_P2P.getCommand()){
-//                    toId = jsonObject.getString("toId");
-//                }else {
-//                    toId = jsonObject.getString("groupId");
-//                }
-//                req.setToId(toId);
-//                req.setFromId(fromId);
-//
-//                ResponseVO responseVO = feignMessageService.checkSendMessage(req);
-//                if(responseVO.isOk()){
-//                    MqMessageProducer.sendMessage(message, command);
-//                }else{
-//                    Integer ackCommand = 0;
-//                    if(command == MessageCommand.MSG_P2P.getCommand()){
-//                        ackCommand = MessageCommand.MSG_ACK.getCommand();
-//                    }else {
-//                        ackCommand = GroupEventCommand.GROUP_MSG_ACK.getCommand();
-//                    }
-//
-//                    ChatMessageAck chatMessageAck = new ChatMessageAck(jsonObject.getString("messageId"));
-//                    responseVO.setData(chatMessageAck);
-//                    MessagePack<ResponseVO> ack = new MessagePack<>();
-//                    ack.setData(responseVO);
-//                    ack.setCommand(ackCommand);
-//                    channelHandlerContext.channel().writeAndFlush(ack);
-//                }
-//            }catch (Exception e){
-//                e.printStackTrace();
-//            }
-//        }
+        else if (command == MessageCommand.MSG_P2P.getCommand()
+                || command == GroupEventCommand.MSG_GROUP.getCommand()) {
+            // 发送消息跑p2p消息和群组消息校验合法性
+            try {
+                String toId = "";
+                CheckSendMessageReq req = new CheckSendMessageReq();
+                req.setAppId(message.getMessageHeader().getAppId());
+                req.setCommand(message.getMessageHeader().getCommand());
+                JSONObject jsonObject = JSON.parseObject(JSONObject.toJSONString(message.getMessagePack()));
+                String fromId = jsonObject.getString("fromId");
+                if(command == MessageCommand.MSG_P2P.getCommand()){
+                    toId = jsonObject.getString("toId");
+                }else {
+                    toId = jsonObject.getString("groupId");
+                }
+                req.setToId(toId);
+                req.setFromId(fromId);
+                // 调用校验消息发送方的接口 (使用feign进行rpc调用)
+                ResponseVO responseVO = feignMessageService.checkSendMessage(req);
+                if(responseVO.isOk()){
+                    // 校验成功 投递消息到mq
+                    MqMessageProducer.sendMessage(message, command);
+                }else{
+                    // 如果失败直接ack
+                    Integer ackCommand = 0;
+                    if(command == MessageCommand.MSG_P2P.getCommand()){
+                        ackCommand = MessageCommand.MSG_ACK.getCommand();
+                    }else {
+                        ackCommand = GroupEventCommand.GROUP_MSG_ACK.getCommand();
+                    }
+
+                    ChatMessageAck chatMessageAck = new ChatMessageAck(jsonObject.getString("messageId"));
+                    responseVO.setData(chatMessageAck);
+                    MessagePack<ResponseVO> ack = new MessagePack<>();
+                    ack.setData(responseVO);
+                    ack.setCommand(ackCommand);
+                    channelHandlerContext.channel().writeAndFlush(ack);
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
         else {
             // 发送mq消息到逻辑层
             MqMessageProducer.sendMessage(message, command);
@@ -189,6 +191,17 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
 
     }
 
+    /**
+     * 表示 channel 处于不活跃状态
+     * @param ctx
+     * @throws Exception
+     */
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        //channel处于不活跃状态 设置用户的session为离线状态
+        SessionSocketHolder.offlineUserSession((NioSocketChannel) ctx.channel());
+        ctx.close();
+    }
 
     /**
      * 当心跳检测的handler检测到超时之后会调下一个handler的userEventTriggered方法

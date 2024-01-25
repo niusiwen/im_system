@@ -22,6 +22,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(gateWayInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns("/v1/user/login")
+                // 远程调用发送消息校验的接口
                 .excludePathPatterns("/v1/message/checkSend");
     }
 

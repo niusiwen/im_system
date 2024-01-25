@@ -83,7 +83,7 @@ logging:
 server:
   port: 8000
 
-
+mqQueueName: 123  # todo ...
 
 mybatis-plus:
 
@@ -105,3 +105,7 @@ httpclient:
   connectionRequestTimeout: 2000
   socketTimeout: 5000
   staleConnectionCheckEnabled: true
+
+
+mpp:
+  entityBasePath: com.nsw.im.service.friendship.dao

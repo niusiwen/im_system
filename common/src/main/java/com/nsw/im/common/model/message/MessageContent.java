@@ -24,4 +24,6 @@ public class MessageContent extends ClientInfo {
     private String extra;
 
     private Long messageKey;
+
+    private long messageSequence;
 }

@@ -6,7 +6,7 @@ import feign.Headers;
 import feign.RequestLine;
 
 /**
- * @description:
+ * @description: feign接口，用于远程服务调用
  * @author: lld
  * @version: 1.0
  */
