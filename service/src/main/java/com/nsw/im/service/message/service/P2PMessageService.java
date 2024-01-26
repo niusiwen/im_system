@@ -3,11 +3,14 @@ package com.nsw.im.service.message.service;
 import com.nsw.im.codec.pack.message.ChatMessageAck;
 import com.nsw.im.codec.pack.message.MessageReciveServerAckPack;
 import com.nsw.im.common.ResponseVO;
+import com.nsw.im.common.constant.Constants;
 import com.nsw.im.common.enums.command.MessageCommand;
 import com.nsw.im.common.model.ClientInfo;
 import com.nsw.im.common.model.message.MessageContent;
 import com.nsw.im.service.message.model.req.SendMessageReq;
 import com.nsw.im.service.message.model.resp.SendMessageResp;
+import com.nsw.im.service.seq.RedisSeq;
+import com.nsw.im.service.utils.ConversationIdGenerate;
 import com.nsw.im.service.utils.MessageProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -38,6 +41,9 @@ public class P2PMessageService {
     @Autowired
     MessageStoreService messageStoreService;
 
+    @Autowired
+    RedisSeq redisSeq;
+
     /**
      * 创建私有线程池 用于服务端接收消息的处理
      */
@@ -59,14 +65,14 @@ public class P2PMessageService {
     }
 
     /**
-     *
+     * 处理p2p消息
      * @param messageContent
      */
     public void process(MessageContent messageContent) {
 
-        String fromId = messageContent.getFromId();
-        String toId = messageContent.getToId();
-        Integer appId = messageContent.getAppId();
+//        String fromId = messageContent.getFromId();
+//        String toId = messageContent.getToId();
+//        Integer appId = messageContent.getAppId();
         /**
          * 代码优化2->前置校验放在tcp层发送mq消息之前
          */
@@ -79,6 +85,13 @@ public class P2PMessageService {
              * 代码优化1-->将服务端收到消息的处理处理逻辑放在线程池
              */
             threadPoolExecutor.execute(()->{
+                // key = appId +":"+ seq +":"+ (from + to)/groupId
+                long seq = redisSeq.deGetSeq(messageContent.getAppId() + ":" +
+                        Constants.SeqConstants.Message + ":" +ConversationIdGenerate.generateP2PId(
+                        messageContent.getFromId(), messageContent.getToId()
+                ));
+                messageContent.setMessageSequence(seq);
+
                 // 插入数据到表里
                 messageStoreService.storeP2PMessage(messageContent);
                 // 1、 回ack成功给自己（客户端） 表示服务端已经收到了
@@ -103,10 +116,16 @@ public class P2PMessageService {
     }
 
 
-
+    /**
+     * 服务端收到消息返回给发送方的ack方法
+     * @param messageContent
+     * @param responseVO
+     */
     private void ack(MessageContent messageContent, ResponseVO responseVO) {
         log.info("msg ack, msgId={},checkResult:{}", messageContent.getMessageId(), responseVO.getCode());
-        ChatMessageAck chatMessageAck = new ChatMessageAck(messageContent.getMessageId());
+        // 这里返回的ack消息也要加上序列号
+        ChatMessageAck chatMessageAck = new
+                ChatMessageAck(messageContent.getMessageId(), messageContent.getMessageSequence());
         responseVO.setData(chatMessageAck);
 
         // 发消息 给发送方

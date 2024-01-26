@@ -39,7 +39,7 @@ public class GroupMessageService {
     MessageStoreService messageStoreService;
 
     /**
-     *
+     * 处理群消息
      * @param messageContent
      */
     public void process(GroupChatMessageContent messageContent) {
@@ -104,6 +104,11 @@ public class GroupMessageService {
         return responseVO;
     }
 
+    /**
+     * 发送群消息（接口调用）
+     * @param req
+     * @return
+     */
     public SendMessageResp send(SendGroupMessageReq req) {
         SendMessageResp resp = new SendMessageResp();
         GroupChatMessageContent messageContent = new GroupChatMessageContent();

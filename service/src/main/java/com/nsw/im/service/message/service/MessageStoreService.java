@@ -3,10 +3,7 @@ package com.nsw.im.service.message.service;
 import com.alibaba.fastjson.JSONObject;
 import com.nsw.im.common.constant.Constants;
 import com.nsw.im.common.enums.DelFlagEnum;
-import com.nsw.im.common.model.message.DoStoreP2PMessageDto;
-import com.nsw.im.common.model.message.GroupChatMessageContent;
-import com.nsw.im.common.model.message.ImMessageBody;
-import com.nsw.im.common.model.message.MessageContent;
+import com.nsw.im.common.model.message.*;
 import com.nsw.im.service.group.dao.ImGroupMessageHistoryEntity;
 import com.nsw.im.service.group.dao.mapper.ImGroupMessageHistoryMapper;
 import com.nsw.im.service.message.dao.ImMessageBodyEntity;
@@ -24,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ *
  * @author nsw
  * @date 2023/11/18 17:27
  */
@@ -45,7 +43,10 @@ public class MessageStoreService {
     @Autowired
     RabbitTemplate rabbitTemplate;
 
-
+    /**
+     * 存储单聊消息 ---> 发送单聊消息存储的mq消息(异步存储)
+     * @param messageContent
+     */
     @Transactional
     public void storeP2PMessage(MessageContent messageContent) {
 //        // messageContent 转化成 messageBody
@@ -93,33 +94,38 @@ public class MessageStoreService {
     }
 
     /**
-     * 参数转为 ImMessageHistoryEntity 实体类的List对象
+     * 参数转为 ImMessageHistoryEntity 实体类的List对象--> 代码优化
      * @param messageContent
      * @param messageBodyEntity
      * @return
      */
-    private List<ImMessageHistoryEntity> extractToP2PMessageHistory(MessageContent messageContent,
-                                                                   ImMessageBodyEntity messageBodyEntity){
-        List<ImMessageHistoryEntity> list = new ArrayList<>();
+//    private List<ImMessageHistoryEntity> extractToP2PMessageHistory(MessageContent messageContent,
+//                                                                   ImMessageBodyEntity messageBodyEntity){
+//        List<ImMessageHistoryEntity> list = new ArrayList<>();
+//
+//        ImMessageHistoryEntity fromHistory = new ImMessageHistoryEntity();
+//        BeanUtils.copyProperties(messageContent, fromHistory);
+//        fromHistory.setOwnerId(messageContent.getFromId());
+//        fromHistory.setMessageKey(messageBodyEntity.getMessageKey());
+//        fromHistory.setCreateTime(System.currentTimeMillis());
+//
+//        ImMessageHistoryEntity toHistory = new ImMessageHistoryEntity();
+//        BeanUtils.copyProperties(messageContent, toHistory);
+//        toHistory.setOwnerId(messageContent.getToId());
+//        toHistory.setMessageKey(messageBodyEntity.getMessageKey());
+//        toHistory.setCreateTime(System.currentTimeMillis());
+//
+//        list.add(fromHistory);
+//        list.add(toHistory);
+//        return list;
+//    }
 
-        ImMessageHistoryEntity fromHistory = new ImMessageHistoryEntity();
-        BeanUtils.copyProperties(messageContent, fromHistory);
-        fromHistory.setOwnerId(messageContent.getFromId());
-        fromHistory.setMessageKey(messageBodyEntity.getMessageKey());
-        fromHistory.setCreateTime(System.currentTimeMillis());
 
-        ImMessageHistoryEntity toHistory = new ImMessageHistoryEntity();
-        BeanUtils.copyProperties(messageContent, toHistory);
-        toHistory.setOwnerId(messageContent.getToId());
-        toHistory.setMessageKey(messageBodyEntity.getMessageKey());
-        toHistory.setCreateTime(System.currentTimeMillis());
-
-        list.add(fromHistory);
-        list.add(toHistory);
-        return list;
-    }
-
-
+    /**
+     * 存储群消息
+     * @param messageContent
+     */
+    @Transactional
     public void storeGroupMessage(GroupChatMessageContent messageContent) {
 //        // messageContent 转化成 messageBody
 //        ImMessageBodyEntity messageBodyEntity = extractMessageBody(messageContent);
@@ -130,17 +136,31 @@ public class MessageStoreService {
 //        imGroupMessageHistoryMapper.insert(imGroupMessageHistoryEntity);
 //
 //        messageContent.setMessageKey(messageBodyEntity.getMessageKey());
+        /**
+         * 代码优化--> 异步消息持久化，将消息的持久化移到message-store服务，这里直接发送消息持久化的mq消息
+         */
+        ImMessageBody imMessageBody = extractMessageBody(messageContent);
+        DoStoreGroupMessageDto dto = new DoStoreGroupMessageDto();
+        dto.setMessageBody(imMessageBody);
+        dto.setGroupChatMessageContent(messageContent);
+        rabbitTemplate.convertAndSend(Constants.RabbitConstants.StoreGroupMessage,
+                "",
+                JSONObject.toJSONString(dto));
+        messageContent.setMessageKey(imMessageBody.getMessageKey());
     }
 
-    private ImGroupMessageHistoryEntity extractToGroupMessageHistory(GroupChatMessageContent messageContent,
-                                                                     ImMessageBodyEntity messageBodyEntity) {
-        ImGroupMessageHistoryEntity result = new ImGroupMessageHistoryEntity();
-        BeanUtils.copyProperties(messageContent, result);
-        result.setGroupId(messageContent.getFromId());
-        result.setMessageKey(messageBodyEntity.getMessageKey());
-        result.setCreateTime(System.currentTimeMillis());
-        return result;
-    }
+    /**
+     * 代码优化
+     */
+//    private ImGroupMessageHistoryEntity extractToGroupMessageHistory(GroupChatMessageContent messageContent,
+//                                                                     ImMessageBodyEntity messageBodyEntity) {
+//        ImGroupMessageHistoryEntity result = new ImGroupMessageHistoryEntity();
+//        BeanUtils.copyProperties(messageContent, result);
+//        result.setGroupId(messageContent.getFromId());
+//        result.setMessageKey(messageBodyEntity.getMessageKey());
+//        result.setCreateTime(System.currentTimeMillis());
+//        return result;
+//    }
 
 
 }

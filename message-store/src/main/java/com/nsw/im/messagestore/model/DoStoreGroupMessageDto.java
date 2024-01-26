@@ -1,6 +1,7 @@
 package com.nsw.im.messagestore.model;
 
 import com.nsw.im.common.model.message.GroupChatMessageContent;
+import com.nsw.im.messagestore.dao.ImMessageBodyEntity;
 import lombok.Data;
 
 /**
@@ -13,6 +14,6 @@ public class DoStoreGroupMessageDto {
 
     private GroupChatMessageContent groupChatMessageContent;
 
-//    private ImMessageBody messageBody;
+    private ImMessageBodyEntity imMessageBodyEntity;
 
 }
