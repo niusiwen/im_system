@@ -17,6 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author nsw
@@ -39,31 +44,56 @@ public class GroupMessageService {
     MessageStoreService messageStoreService;
 
     /**
+     * 创建私有线程池 用于群聊服务端接收消息的处理
+     */
+    private final ThreadPoolExecutor threadPoolExecutor;
+
+    {
+        AtomicInteger num = new AtomicInteger(0);
+        threadPoolExecutor = new ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS,
+                new LinkedBlockingDeque<>(1000), new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread thread = new Thread(r);
+                thread.setDaemon(true); //设置为守护线程
+                thread.setName("message-process-thread-"+ num.getAndIncrement());
+                return thread;
+            }
+
+        });
+    }
+
+    /**
      * 处理群消息
      * @param messageContent
      */
     public void process(GroupChatMessageContent messageContent) {
 
-        String fromId = messageContent.getFromId();
-        String toId = messageContent.getGroupId();
-        Integer appId = messageContent.getAppId();
+//        String fromId = messageContent.getFromId();
+//        String toId = messageContent.getGroupId();
+//        Integer appId = messageContent.getAppId();
         // 前置校验
         // 这个用户是否被禁言，是否被禁用
         // 发送方和接受方是否是好友(非绝对的，有些app不是好友也可以发)
-        ResponseVO responseVO = isServerPermissCheck(fromId, toId, appId);
-        if (responseVO.isOk()) {
-            // 存储群消息
-            messageStoreService.storeGroupMessage(messageContent);
-            // 1、 回ack成功给自己（客户端） 表示服务端已经收到了
-            ack(messageContent, responseVO);
-            // 2、发消息给同步在线端
-            syncToSender(messageContent, messageContent);
-            // 3、发消息给对方在线端
-            dispatchMessage(messageContent);
-        } else {
-            // 不成功 告诉客户端失败了，也是ack
-            ack(messageContent, responseVO);
-        }
+//        ResponseVO responseVO = isServerPermissCheck(fromId, toId, appId);
+//        if (responseVO.isOk()) {
+        /**
+         * 代码优化，消息处理使用线程池，消息持久化异步处理，消息合法化校验前置
+         */
+            threadPoolExecutor.execute(()->{
+                // 存储群消息
+                messageStoreService.storeGroupMessage(messageContent);
+                // 1、 回ack成功给自己（客户端） 表示服务端已经收到了
+                ack(messageContent, ResponseVO.successResponse());
+                // 2、发消息给同步在线端
+                syncToSender(messageContent, messageContent);
+                // 3、发消息给对方在线端
+                dispatchMessage(messageContent);
+            });
+//        } else {
+//            // 不成功 告诉客户端失败了，也是ack
+//            ack(messageContent, responseVO);
+//        }
 
 
     }

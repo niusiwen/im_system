@@ -5,7 +5,7 @@ import com.nsw.im.messagestore.dao.ImMessageBodyEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
-//@Repository
-@Mapper
+@Repository
+//@Mapper
 public interface ImMessageBodyMapper extends BaseMapper<ImMessageBodyEntity> {
 }

@@ -7,8 +7,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 
-//@Repository
-@Mapper
+@Repository
+//@Mapper
 public interface ImMessageHistoryMapper extends BaseMapper<ImMessageHistoryEntity> {
 
     /**

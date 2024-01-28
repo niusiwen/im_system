@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@MapperScan("com.nsw.messagestore.dao.mapper")
+@MapperScan("com.nsw.im.messagestore.dao.mapper")
 public class MessageStoreApplication {
 
     public static void main(String[] args) {
