@@ -73,6 +73,34 @@ public class P2PMessageService {
 //        String fromId = messageContent.getFromId();
 //        String toId = messageContent.getToId();
 //        Integer appId = messageContent.getAppId();
+
+        // 用messageId 从缓存中获取消息
+        MessageContent messageFromMessageIdCache = messageStoreService
+                .getMessageFromMessageIdCache(messageContent.getAppId(), messageContent.getMessageId(), MessageContent.class);
+        // 缓存中有，消息不需要持久化，只需要分发消息
+        if (messageFromMessageIdCache != null) {
+            threadPoolExecutor.execute(()->{
+                // 1、 回ack成功给自己（客户端） 表示服务端已经收到了
+                ack(messageFromMessageIdCache, ResponseVO.successResponse());
+                // 2、发消息给同步在线端
+                syncToSender(messageFromMessageIdCache, messageFromMessageIdCache);
+                // 3、发消息给对方在线端
+                List<ClientInfo> clientInfos = dispatchMessage(messageFromMessageIdCache);
+                if (clientInfos.isEmpty()) {
+                    // 都为空，由服务端发送消息接收确认给发送方
+                    revicerAck(messageFromMessageIdCache);
+                }
+            });
+            return;
+        }
+
+        //单聊消息加上序列号： key = appId +":"+ seq +":"+ (from + to)/groupId
+        long seq = redisSeq.deGetSeq(messageContent.getAppId() + ":" +
+                Constants.SeqConstants.Message + ":" +ConversationIdGenerate.generateP2PId(
+                messageContent.getFromId(), messageContent.getToId()
+        ));
+        messageContent.setMessageSequence(seq);
+
         /**
          * 代码优化2->前置校验放在tcp层发送mq消息之前
          */
@@ -85,13 +113,6 @@ public class P2PMessageService {
              * 代码优化1-->将服务端收到消息的处理处理逻辑放在线程池
              */
             threadPoolExecutor.execute(()->{
-                // key = appId +":"+ seq +":"+ (from + to)/groupId
-                long seq = redisSeq.deGetSeq(messageContent.getAppId() + ":" +
-                        Constants.SeqConstants.Message + ":" +ConversationIdGenerate.generateP2PId(
-                        messageContent.getFromId(), messageContent.getToId()
-                ));
-                messageContent.setMessageSequence(seq);
-
                 // 插入数据到表里
                 messageStoreService.storeP2PMessage(messageContent);
                 // 1、 回ack成功给自己（客户端） 表示服务端已经收到了
@@ -100,6 +121,11 @@ public class P2PMessageService {
                 syncToSender(messageContent, messageContent);
                 // 3、发消息给对方在线端
                 List<ClientInfo> clientInfos = dispatchMessage(messageContent);
+
+                //将messageId 存到缓存中
+                messageStoreService.setMessageFromMessageIdCache(messageContent.getAppId(),
+                        messageContent.getMessageId(), messageContent);
+
                 if (clientInfos.isEmpty()) {
                     // 都为空，由服务端发送消息接收确认给发送方
                     revicerAck(messageContent);

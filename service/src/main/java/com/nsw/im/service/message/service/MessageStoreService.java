@@ -11,14 +11,17 @@ import com.nsw.im.service.message.dao.ImMessageHistoryEntity;
 import com.nsw.im.service.message.dao.mapper.ImMessageBodyMapper;
 import com.nsw.im.service.message.dao.mapper.ImMessageHistoryMapper;
 import com.nsw.im.service.utils.SnowflakeIdWorker;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -42,6 +45,9 @@ public class MessageStoreService {
 
     @Autowired
     RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    StringRedisTemplate stringRedisTemplate;
 
     /**
      * 存储单聊消息 ---> 发送单聊消息存储的mq消息(异步存储)
@@ -161,6 +167,34 @@ public class MessageStoreService {
 //        result.setCreateTime(System.currentTimeMillis());
 //        return result;
 //    }
+
+    /**
+     * Redis中缓存消息
+     * @param messageContent
+     */
+    public void setMessageFromMessageIdCache(Integer appId, String messageId, Object messageContent) {
+        // key = appId : cache : messageId
+        String key = appId + ":" + Constants.RedisConstants.cacheMessage
+                + ":" + messageId;
+        stringRedisTemplate.opsForValue().set(key, JSONObject.toJSONString(messageContent),
+                300, TimeUnit.SECONDS); // 保存5分钟
+    }
+
+    /**
+     * Redis获取缓存的消息
+     * @param appId
+     * @param messageId
+     * @return
+     */
+    public <T> T getMessageFromMessageIdCache(Integer appId, String messageId, Class<T> tClass) {
+        String key = appId + ":" + Constants.RedisConstants.cacheMessage
+                + ":" + messageId;
+        String msg = stringRedisTemplate.opsForValue().get(key);
+        if (StringUtils.isBlank(msg)) {
+            return null;
+        }
+        return JSONObject.parseObject(msg, tClass);
+    }
 
 
 }
