@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
- * @description:
- * @author: lld
+ * @description: 群表
+ * @author: nsw
  * @version: 1.0
  */
 @Data

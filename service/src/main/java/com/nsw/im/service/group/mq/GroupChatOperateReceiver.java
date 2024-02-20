@@ -2,11 +2,14 @@ package com.nsw.im.service.group.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
 import com.nsw.im.common.constant.Constants;
 import com.nsw.im.common.enums.command.GroupEventCommand;
 import com.nsw.im.common.enums.command.MessageCommand;
 import com.nsw.im.common.model.message.GroupChatMessageContent;
+import com.nsw.im.common.model.message.MessageReadedContent;
 import com.nsw.im.service.group.service.GroupMessageService;
+import com.nsw.im.service.message.service.MessageSyncService;
 import com.nsw.im.service.message.service.P2PMessageService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +41,9 @@ public class GroupChatOperateReceiver {
     @Autowired
     GroupMessageService groupMessageService;
 
+    @Autowired
+    MessageSyncService messageSyncService;
+
     @RabbitListener(
             // 绑定交换机和消息队列
             bindings = @QueueBinding(
@@ -67,6 +73,10 @@ public class GroupChatOperateReceiver {
 
                 groupMessageService.process(messageContent);
 
+            } else if (command.equals(GroupEventCommand.MSG_GROUP_READED.getCommand())) {
+                MessageReadedContent messageReadedContent = JSON.parseObject(msg, new TypeReference<MessageReadedContent>() {
+                }.getType());
+                messageSyncService.groupReadMark(messageReadedContent);
             }
             // 处理完消息，ack确认
             channel.basicAck(deliveryTag, false);

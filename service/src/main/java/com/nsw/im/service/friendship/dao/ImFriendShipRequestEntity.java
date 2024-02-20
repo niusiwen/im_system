@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-
+/**
+ * 好友关系请求表
+ */
 @Data
 @TableName("im_friendship_request")
 public class ImFriendShipRequestEntity {

@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
- * @author: Chackylee
- * @description:
+ * @author: nisiwen
+ * @description: 单聊历史消息表
  **/
 @Data
 @TableName("im_message_history")

@@ -7,7 +7,7 @@ import lombok.Data;
 
 /**
  * 好友关系表
- * @author: Chackylee
+ * @author: niusiwen
  * @description:
  **/
 

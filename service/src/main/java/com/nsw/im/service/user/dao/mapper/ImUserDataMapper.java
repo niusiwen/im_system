@@ -5,6 +5,7 @@ import com.nsw.im.service.user.dao.ImUserDataEntity;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
+ * 用户表
  * @author nsw
  * @date 2023/8/12
  */
