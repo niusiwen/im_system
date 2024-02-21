@@ -73,7 +73,7 @@ appConfig:
   sendGroupMessageAfterCallback: false # 发送群聊消息之后
   sendGroupMessageBeforeCallback: false # 发送群聊消息之前
   offlineMessageCount: 1000 #离线消息存储条数
-  deleteConversationSyncMode: 1 #1多段同步
+  deleteConversationSyncMode: 1 #会话删除的同步策略：1多端同步
 
 
 # logger 配置
