@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * 单聊消息处理的service
  * @author nsw
  * @date 2023/11/16 22:54
  */
@@ -74,10 +75,9 @@ public class P2PMessageService {
 //        String toId = messageContent.getToId();
 //        Integer appId = messageContent.getAppId();
 
-        // 用messageId 从缓存中获取消息
+        // 先用messageId从缓存中获取消息，缓存中有，消息不需要持久化，只需要分发消息     -->用来保证消息的幂等性，防止数据库中重复存储消息
         MessageContent messageFromMessageIdCache = messageStoreService
                 .getMessageFromMessageIdCache(messageContent.getAppId(), messageContent.getMessageId(), MessageContent.class);
-        // 缓存中有，消息不需要持久化，只需要分发消息
         if (messageFromMessageIdCache != null) {
             threadPoolExecutor.execute(()->{
                 // 1、 回ack成功给自己（客户端） 表示服务端已经收到了
@@ -94,7 +94,7 @@ public class P2PMessageService {
             return;
         }
 
-        //单聊消息加上序列号： key = appId +":"+ seq +":"+ (from + to)/groupId
+        //单聊消息加上序列号： key = appId +":"+ seq +":"+ (from + to)/groupId  -->用来保证消息的有序性
         long seq = redisSeq.deGetSeq(messageContent.getAppId() + ":" +
                 Constants.SeqConstants.Message + ":" +ConversationIdGenerate.generateP2PId(
                 messageContent.getFromId(), messageContent.getToId()
@@ -122,7 +122,7 @@ public class P2PMessageService {
                 // 3、发消息给对方在线端
                 List<ClientInfo> clientInfos = dispatchMessage(messageContent);
 
-                //将messageId 存到缓存中
+                //将messageId 存到缓存中  --> 用来保证消息的幂等性，防止数据库中重复存储消息
                 messageStoreService.setMessageFromMessageIdCache(messageContent.getAppId(),
                         messageContent.getMessageId(), messageContent);
 

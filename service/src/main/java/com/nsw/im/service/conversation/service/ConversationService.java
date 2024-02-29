@@ -51,6 +51,10 @@ public class ConversationService {
         return type + "_" + fromId + "_" + toId;
     }
 
+    /**
+     * 消息标记为已读
+     * @param messageReadedContent
+     */
     public void messageMarkRead(MessageReadedContent messageReadedContent) {
 
         String toId = messageReadedContent.getToId();

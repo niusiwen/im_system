@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * 群聊消息处理的service
  * @author nsw
  * @date 2023/11/18 16:23
  */
