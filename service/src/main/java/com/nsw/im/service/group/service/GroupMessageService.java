@@ -7,6 +7,7 @@ import com.nsw.im.common.enums.command.GroupEventCommand;
 import com.nsw.im.common.enums.command.MessageCommand;
 import com.nsw.im.common.model.ClientInfo;
 import com.nsw.im.common.model.message.GroupChatMessageContent;
+import com.nsw.im.common.model.message.OfflineMessageContent;
 import com.nsw.im.service.group.model.req.SendGroupMessageReq;
 import com.nsw.im.service.message.model.resp.SendMessageResp;
 import com.nsw.im.service.message.service.CheckSendMessageService;
@@ -89,7 +90,7 @@ public class GroupMessageService {
                 ack(messageContent, ResponseVO.successResponse());
                 // 2、发消息给同步在线端
                 syncToSender(messageContent, messageContent);
-                // 3、发消息给对方在线端
+                // 3、发消息给所有群成員
                 dispatchMessage(messageContent);
             });
             return;
@@ -111,11 +112,23 @@ public class GroupMessageService {
             threadPoolExecutor.execute(()->{
                 // 存储群消息
                 messageStoreService.storeGroupMessage(messageContent);
+
+                List<String> groupMemberId = imGroupMemberService.getGroupMemberId(messageContent.getGroupId(),
+                        messageContent.getAppId());
+                messageContent.setMemberIds(groupMemberId);
+
+                // 插入群离线消息 (使用redis的zset存儲)
+                OfflineMessageContent offlineMessageContent = new OfflineMessageContent();
+                BeanUtils.copyProperties(messageContent, offlineMessageContent);
+                offlineMessageContent.setToId(messageContent.getGroupId());
+                messageStoreService.storeGroupOfflineMessage(offlineMessageContent, groupMemberId);
+
+
                 // 1、 回ack成功给自己（客户端） 表示服务端已经收到了
                 ack(messageContent, ResponseVO.successResponse());
                 // 2、发消息给同步在线端
                 syncToSender(messageContent, messageContent);
-                // 3、发消息给对方在线端
+                // 3、发消息给所有群成员
                 dispatchMessage(messageContent);
 
                 //将messageId 存到缓存中
@@ -131,7 +144,11 @@ public class GroupMessageService {
     }
 
 
-
+    /**
+     * 发送ack消息给发送方
+     * @param messageContent
+     * @param responseVO
+     */
     private void ack(GroupChatMessageContent messageContent, ResponseVO responseVO) {
         log.info("msg ack, msgId={},checkResult:{}", messageContent.getMessageId(), responseVO.getCode());
         ChatMessageAck chatMessageAck = new ChatMessageAck(messageContent.getMessageId());
@@ -144,16 +161,24 @@ public class GroupMessageService {
     }
 
 
+    /**
+     * 发送群消息给发送端的其他所有在线端
+     * @param messageContent
+     * @param clientInfo
+     */
     private void syncToSender(GroupChatMessageContent messageContent, ClientInfo clientInfo) {
         log.info("msg syncToSender, msgId={} ", messageContent.getMessageId());
         messageProducer.sendToUserExceptClient(messageContent.getFromId(),
                 GroupEventCommand.MSG_GROUP, messageContent, clientInfo);
     }
 
+    /**
+     * 发送群消息给所有群成员
+     * @param messageContent
+     */
     private void dispatchMessage(GroupChatMessageContent messageContent) {
-        List<String> groupMemberId = imGroupMemberService.getGroupMemberId(messageContent.getGroupId(),
-                messageContent.getAppId());
-        for (String memberId : groupMemberId) {
+
+        for (String memberId : messageContent.getMemberIds()) {
             if (!memberId.equals(messageContent.getFromId() )) {
                 messageProducer.sendToUser(memberId,
                         GroupEventCommand.MSG_GROUP,

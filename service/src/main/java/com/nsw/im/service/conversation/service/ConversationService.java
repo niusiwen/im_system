@@ -47,7 +47,7 @@ public class ConversationService {
      * @param toId
      * @return
      */
-    private String convertConversationId(Integer type,String fromId,String toId) {
+    public String convertConversationId(Integer type,String fromId,String toId) {
         return type + "_" + fromId + "_" + toId;
     }
 

@@ -2,6 +2,8 @@ package com.nsw.im.common.model.message;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 群聊的消息体类
  * @author nsw
@@ -10,5 +12,13 @@ import lombok.Data;
 @Data
 public class GroupChatMessageContent extends MessageContent {
 
+    /**
+     * 群id
+     */
     private String groupId;
+
+    /**
+     * 群成员Id
+     */
+    private List<String> memberIds;
 }

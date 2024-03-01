@@ -4,9 +4,11 @@ import com.nsw.im.codec.pack.message.ChatMessageAck;
 import com.nsw.im.codec.pack.message.MessageReciveServerAckPack;
 import com.nsw.im.common.ResponseVO;
 import com.nsw.im.common.constant.Constants;
+import com.nsw.im.common.enums.ConversationTypeEnum;
 import com.nsw.im.common.enums.command.MessageCommand;
 import com.nsw.im.common.model.ClientInfo;
 import com.nsw.im.common.model.message.MessageContent;
+import com.nsw.im.common.model.message.OfflineMessageContent;
 import com.nsw.im.service.message.model.req.SendMessageReq;
 import com.nsw.im.service.message.model.resp.SendMessageResp;
 import com.nsw.im.service.seq.RedisSeq;
@@ -115,6 +117,12 @@ public class P2PMessageService {
             threadPoolExecutor.execute(()->{
                 // 插入数据到表里
                 messageStoreService.storeP2PMessage(messageContent);
+
+                // 插入离线消息 (使用redis的zset存儲)
+                OfflineMessageContent offlineMessageContent = new OfflineMessageContent();
+                BeanUtils.copyProperties(messageContent, offlineMessageContent);
+                messageStoreService.storeOfflineMessage(offlineMessageContent);
+
                 // 1、 回ack成功给自己（客户端） 表示服务端已经收到了
                 ack(messageContent, ResponseVO.successResponse());
                 // 2、发消息给同步在线端
