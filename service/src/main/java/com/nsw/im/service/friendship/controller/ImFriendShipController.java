@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
+ * 好友关系
  * @author nsw
  * @date 2023/8/12 10:13
  */

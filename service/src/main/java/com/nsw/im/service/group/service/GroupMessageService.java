@@ -97,7 +97,7 @@ public class GroupMessageService {
         }
 
         // 群聊消息加上序列号
-        long seq = redisSeq.deGetSeq(messageContent.getAppId() + ":" + Constants.SeqConstants.GroupMessage
+        long seq = redisSeq.doGetSeq(messageContent.getAppId() + ":" + Constants.SeqConstants.GroupMessage
                 +":" + messageContent.getGroupId());
         messageContent.setMessageTime(seq);
 

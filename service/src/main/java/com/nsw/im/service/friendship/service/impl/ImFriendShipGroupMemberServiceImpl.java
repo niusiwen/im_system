@@ -11,6 +11,7 @@ import com.nsw.im.service.friendship.service.ImFriendShipGroupMemberService;
 import com.nsw.im.service.friendship.service.ImFriendShipGroupService;
 import com.nsw.im.service.user.dao.ImUserDataEntity;
 import com.nsw.im.service.user.service.ImUserService;
+import com.nsw.im.service.utils.MessageProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,8 +38,8 @@ public class ImFriendShipGroupMemberServiceImpl implements ImFriendShipGroupMemb
     @Autowired
     ImFriendShipGroupMemberService thisService;
 
-//    @Autowired
-//    MessageProducer messageProducer;
+    @Autowired
+    MessageProducer messageProducer;
 
     @Override
     @Transactional
@@ -62,6 +63,8 @@ public class ImFriendShipGroupMemberServiceImpl implements ImFriendShipGroupMemb
         }
 
         Long seq = imFriendShipGroupService.updateSeq(req.getFromId(), req.getGroupName(), req.getAppId());
+
+        // todo
 //        AddFriendGroupMemberPack pack = new AddFriendGroupMemberPack();
 //        pack.setFromId(req.getFromId());
 //        pack.setGroupName(req.getGroupName());
@@ -93,6 +96,7 @@ public class ImFriendShipGroupMemberServiceImpl implements ImFriendShipGroupMemb
         }
 
         Long seq = imFriendShipGroupService.updateSeq(req.getFromId(), req.getGroupName(), req.getAppId());
+        // todo
 //        DeleteFriendGroupMemberPack pack = new DeleteFriendGroupMemberPack();
 //        pack.setFromId(req.getFromId());
 //        pack.setGroupName(req.getGroupName());

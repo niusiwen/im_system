@@ -97,7 +97,7 @@ public class P2PMessageService {
         }
 
         //单聊消息加上序列号： key = appId +":"+ seq +":"+ (from + to)/groupId  -->用来保证消息的有序性
-        long seq = redisSeq.deGetSeq(messageContent.getAppId() + ":" +
+        long seq = redisSeq.doGetSeq(messageContent.getAppId() + ":" +
                 Constants.SeqConstants.Message + ":" +ConversationIdGenerate.generateP2PId(
                 messageContent.getFromId(), messageContent.getToId()
         ));

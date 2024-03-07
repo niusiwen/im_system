@@ -28,7 +28,7 @@ public interface ImFriendShipRequestService {
     public ResponseVO approverFriendRequest(ApproverFriendRequestReq req);
 
     /**
-     * 读取好友申请的结果
+     * 好友申请已读(请求设置为已读)
      * @param req
      * @return
      */

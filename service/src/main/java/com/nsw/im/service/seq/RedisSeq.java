@@ -14,7 +14,12 @@ public class RedisSeq {
     @Autowired
     StringRedisTemplate stringRedisTemplate;
 
-    public long deGetSeq(String key) {
+    /**
+     * 生成全局唯一的自增序列号
+     * @param key
+     * @return
+     */
+    public long doGetSeq(String key) {
         return stringRedisTemplate.opsForValue().increment(key);
     }
 }
