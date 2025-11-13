@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
+ * @description: 群组模块
  * @author nsw
  * @date 2023/9/23 13:56
  */

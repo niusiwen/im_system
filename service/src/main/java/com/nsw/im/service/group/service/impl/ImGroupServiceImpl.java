@@ -26,6 +26,7 @@ import com.nsw.im.service.group.model.resp.GetJoinedGroupResp;
 import com.nsw.im.service.group.model.resp.GetRoleInGroupResp;
 import com.nsw.im.service.group.service.ImGroupMemberService;
 import com.nsw.im.service.group.service.ImGroupService;
+import com.nsw.im.service.seq.RedisSeq;
 import com.nsw.im.service.utils.CallbackService;
 import com.nsw.im.service.utils.GroupMessageProducer;
 import org.apache.commons.lang3.StringUtils;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
+ * 群组
  * @author nsw
  * @date 2023/9/22 22:17
  */
@@ -61,8 +63,10 @@ public class ImGroupServiceImpl implements ImGroupService {
     @Autowired
     GroupMessageProducer groupMessageProducer;
 
-//    @Autowired
-//    RedisSeq redisSeq;
+    // 群组模块增加序列号与好友模块不同，不需要把序列号写到redis中，不然群里有多少成员，就要写多少个序列号
+    // 群组采用查询用户加入所有的群中，最大的序列号，和本地存储的序列号对比，实现增量拉取群数据。注：每个用户所加的所有群都有一个序列号
+    @Autowired
+    RedisSeq redisSeq;
 
     @Override
     public ResponseVO importGroup(ImportGroupReq req) {
@@ -130,8 +134,9 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity imGroupEntity = new ImGroupEntity();
-//        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
-//        imGroupEntity.setSequence(seq);
+        // 创建群组的时候 给群组加一个序列号
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        imGroupEntity.setSequence(seq);
         imGroupEntity.setCreateTime(System.currentTimeMillis());
         imGroupEntity.setStatus(GroupStatusEnum.NORMAL.getCode());
         BeanUtils.copyProperties(req, imGroupEntity);
@@ -210,10 +215,11 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity update = new ImGroupEntity();
-//        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        // 修改群信息时 也加上一个序列号
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
         BeanUtils.copyProperties(req, update);
         update.setUpdateTime(System.currentTimeMillis());
-//        update.setSequence(seq);
+        update.setSequence(seq);
         int row = imGroupDataMapper.update(update, query);
         if (row != 1) {
             throw new ApplicationException(GroupErrorCode.THIS_OPERATE_NEED_MANAGER_ROLE);
@@ -313,10 +319,11 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity update = new ImGroupEntity();
-//        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        // 解散群时，加一个序列号
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
 
         update.setStatus(GroupStatusEnum.DESTROY.getCode());
-//        update.setSequence(seq);
+        update.setSequence(seq);
         int update1 = imGroupDataMapper.update(update, objectQueryWrapper);
         if (update1 != 1) {
             throw new ApplicationException(GroupErrorCode.UPDATE_GROUP_BASE_INFO_ERROR);
@@ -333,7 +340,7 @@ public class ImGroupServiceImpl implements ImGroupService {
 
         //解散群发送给群组的消息
         DestroyGroupPack pack = new DestroyGroupPack();
-        // pack.setSequence(seq);
+        pack.setSequence(seq);
         pack.setGroupId(req.getGroupId());
         groupMessageProducer.producer(req.getOperater(),
                 GroupEventCommand.DESTROY_GROUP, pack, new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
@@ -341,6 +348,11 @@ public class ImGroupServiceImpl implements ImGroupService {
         return ResponseVO.successResponse();
     }
 
+    /**
+     * 转移群主
+     * @param req
+     * @return
+     */
     @Override
     @Transactional
     public ResponseVO transferGroup(TransferGroupReq req) {
@@ -358,7 +370,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         if (!newOwnerRole.isOk()) {
             return newOwnerRole;
         }
-
+        // 判断群是否已经解散
         QueryWrapper<ImGroupEntity> objectQueryWrapper = new QueryWrapper<>();
         objectQueryWrapper.eq("group_id", req.getGroupId());
         objectQueryWrapper.eq("app_id", req.getAppId());
@@ -368,6 +380,10 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity updateGroup = new ImGroupEntity();
+        // todo 转移群主是否加上序列号
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        updateGroup.setSequence(seq);
+
         updateGroup.setOwnerId(req.getOwnerId());
         UpdateWrapper<ImGroupEntity> updateGroupWrapper = new UpdateWrapper<>();
         updateGroupWrapper.eq("app_id", req.getAppId());
@@ -414,6 +430,11 @@ public class ImGroupServiceImpl implements ImGroupService {
         return ResponseVO.successResponse(getGroupResp);
     }
 
+    /**
+     * 禁言群
+     * @param req
+     * @return
+     */
     @Override
     public ResponseVO muteGroup(MuteGroupReq req) {
 
