@@ -2,6 +2,7 @@ package com.nsw.im.service.friendship.service;
 
 import com.nsw.im.common.ResponseVO;
 import com.nsw.im.common.model.RequestBase;
+import com.nsw.im.common.model.SyncReq;
 import com.nsw.im.service.friendship.model.req.*;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +44,7 @@ public interface ImFriendService {
 
     public ResponseVO checkBlack(CheckFriendShipReq req);
 
-    // public ResponseVO syncFriendshipList(SyncReq req);
+    public ResponseVO syncFriendshipList(SyncReq req);
 
     public List<String> getAllFriendId(String userId, Integer appId);
 }

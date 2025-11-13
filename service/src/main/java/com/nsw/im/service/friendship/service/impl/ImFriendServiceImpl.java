@@ -14,6 +14,8 @@ import com.nsw.im.common.enums.FriendShipStatusEnum;
 import com.nsw.im.common.enums.command.FriendshipEventCommand;
 import com.nsw.im.common.exception.ApplicationException;
 import com.nsw.im.common.model.RequestBase;
+import com.nsw.im.common.model.SyncReq;
+import com.nsw.im.common.model.SyncResp;
 import com.nsw.im.service.friendship.dao.ImFriendShipEntity;
 import com.nsw.im.service.friendship.dao.mapper.ImFriendShipMapper;
 import com.nsw.im.service.friendship.model.callback.AddFriendAfterCallbackDto;
@@ -482,42 +484,42 @@ public class ImFriendServiceImpl implements ImFriendService {
         return ResponseVO.successResponse(result);
     }
 
-//    /**
-//     * 客户端同步拉取好友关系列表
-//     * @param req
-//     * @return
-//     */
-//    @Override
-//    public ResponseVO syncFriendshipList(SyncReq req) {
-//
-//        if(req.getMaxLimit() > 100){
-//            req.setMaxLimit(100);
-//        }
-//
-//        SyncResp<ImFriendShipEntity> resp = new SyncResp<>();
-//        //seq > req.getseq limit maxLimit
-//        QueryWrapper<ImFriendShipEntity> queryWrapper = new QueryWrapper<>();
-//        queryWrapper.eq("from_id",req.getOperater());
-//        queryWrapper.gt("friend_sequence",req.getLastSequence());
-//        queryWrapper.eq("app_id",req.getAppId());
-//        queryWrapper.last(" limit " + req.getMaxLimit());
-//        queryWrapper.orderByAsc("friend_sequence");
-//        List<ImFriendShipEntity> list = imFriendShipMapper.selectList(queryWrapper);
-//
-//        if(!CollectionUtils.isEmpty(list)){
-//            ImFriendShipEntity maxSeqEntity = list.get(list.size() - 1);
-//            resp.setDataList(list);
-//            //设置最大seq
-//            Long friendShipMaxSeq = imFriendShipMapper.getFriendShipMaxSeq(req.getAppId(), req.getOperater());
-//            resp.setMaxSequence(friendShipMaxSeq);
-//            //设置是否拉取完毕
-//            resp.setCompleted(maxSeqEntity.getFriendSequence() >= friendShipMaxSeq);
-//            return ResponseVO.successResponse(resp);
-//        }
-//
-//        resp.setCompleted(true);
-//        return ResponseVO.successResponse(resp);
-//    }
+    /**
+     * 客户端同步拉取好友关系列表
+     * @param req
+     * @return
+     */
+    @Override
+    public ResponseVO syncFriendshipList(SyncReq req) {
+
+        if(req.getMaxLimit() > 100){
+            req.setMaxLimit(100);
+        }
+
+        SyncResp<ImFriendShipEntity> resp = new SyncResp<>();
+        //seq > req.getseq limit maxLimit
+        QueryWrapper<ImFriendShipEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("from_id",req.getOperater());
+        queryWrapper.gt("friend_sequence",req.getLastSequence());
+        queryWrapper.eq("app_id",req.getAppId());
+        queryWrapper.last(" limit " + req.getMaxLimit());
+        queryWrapper.orderByAsc("friend_sequence");
+        List<ImFriendShipEntity> list = imFriendShipMapper.selectList(queryWrapper);
+
+        if(!CollectionUtils.isEmpty(list)){
+            ImFriendShipEntity maxSeqEntity = list.get(list.size() - 1);
+            resp.setDataList(list);
+            //设置最大seq
+            Long friendShipMaxSeq = imFriendShipMapper.getFriendShipMaxSeq(req.getAppId(), req.getOperater());
+            resp.setMaxSequence(friendShipMaxSeq);
+            //设置是否拉取完毕
+            resp.setCompleted(maxSeqEntity.getFriendSequence() >= friendShipMaxSeq);
+            return ResponseVO.successResponse(resp);
+        }
+
+        resp.setCompleted(true);
+        return ResponseVO.successResponse(resp);
+    }
 
     @Override
     public List<String> getAllFriendId(String userId, Integer appId) {

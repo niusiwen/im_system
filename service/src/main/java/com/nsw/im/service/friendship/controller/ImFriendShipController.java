@@ -1,6 +1,7 @@
 package com.nsw.im.service.friendship.controller;
 
 import com.nsw.im.common.ResponseVO;
+import com.nsw.im.common.model.SyncReq;
 import com.nsw.im.service.friendship.model.req.*;
 import com.nsw.im.service.friendship.service.ImFriendService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,12 +89,17 @@ public class ImFriendShipController {
         return imFriendShipService.checkBlack(req);
     }
 
-
-//    @RequestMapping("/syncFriendshipList")
-//    public ResponseVO syncFriendshipList(@RequestBody @Validated SyncReq req, Integer appId){
-//        req.setAppId(appId);
-//        return imFriendShipService.syncFriendshipList(req);
-//    }
+    /**
+     * 客户端拉取好友关系接口
+     * @param req
+     * @param appId
+     * @return
+     */
+    @RequestMapping("/syncFriendshipList")
+    public ResponseVO syncFriendshipList(@RequestBody @Validated SyncReq req, Integer appId){
+        req.setAppId(appId);
+        return imFriendShipService.syncFriendshipList(req);
+    }
 
 
 
