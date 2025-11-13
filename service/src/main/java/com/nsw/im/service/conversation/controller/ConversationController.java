@@ -1,6 +1,7 @@
 package com.nsw.im.service.conversation.controller;
 
 import com.nsw.im.common.ResponseVO;
+import com.nsw.im.common.model.SyncReq;
 import com.nsw.im.service.conversation.model.DeleteConversationReq;
 import com.nsw.im.service.conversation.model.UpdateConversationReq;
 import com.nsw.im.service.conversation.service.ConversationService;
@@ -45,6 +46,18 @@ public class ConversationController {
     public ResponseVO updateConversation(@RequestBody @Validated UpdateConversationReq req, Integer appId) {
         req.setAppId(appId);
         return conversationService.updateConversation(req);
+    }
+
+    /**
+     * 前端增量同步会话列表接口
+     * @param req
+     * @param appId
+     * @return
+     */
+    @RequestMapping("/syncConversationList")
+    public ResponseVO syncConversationList(@RequestBody @Validated SyncReq req, Integer appId) {
+        req.setAppId(appId);
+        return conversationService.syncConversationSet(req);
     }
 
 }

@@ -1,6 +1,8 @@
 package com.nsw.im.service.conversation.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.nsw.im.codec.pack.conversation.DeleteConversationPack;
 import com.nsw.im.codec.pack.conversation.UpdateConversationPack;
 import com.nsw.im.common.ResponseVO;
@@ -10,6 +12,8 @@ import com.nsw.im.common.enums.ConversationErrorCode;
 import com.nsw.im.common.enums.ConversationTypeEnum;
 import com.nsw.im.common.enums.command.ConversationEventCommand;
 import com.nsw.im.common.model.ClientInfo;
+import com.nsw.im.common.model.SyncReq;
+import com.nsw.im.common.model.SyncResp;
 import com.nsw.im.common.model.message.MessageReadedContent;
 import com.nsw.im.service.conversation.dao.ImConversationSetEntity;
 import com.nsw.im.service.conversation.dao.mapper.ImConversationSetMapper;
@@ -21,6 +25,8 @@ import com.nsw.im.service.utils.WriteUserSeq;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * @author nsw
@@ -78,7 +84,7 @@ public class ConversationService {
             imConversationSetEntity.setConversationId(conversationId);
             BeanUtils.copyProperties(messageReadedContent, imConversationSetEntity);
             imConversationSetEntity.setReadedSequence(messageReadedContent.getMessageSequence());
-            imConversationSetEntity.setToId(toId);
+            imConversationSetEntity.setToId(toId); //这里需要再次赋值一下toId，
             imConversationSetEntity.setSequence(seq);
             imConversationSetMapper.insert(imConversationSetEntity);
             writeUserSeq.writeUserSeq(messageReadedContent.getAppId(), messageReadedContent.getFromId(),
@@ -172,4 +178,36 @@ public class ConversationService {
         return ResponseVO.successResponse();
     }
 
+    public ResponseVO syncConversationSet(SyncReq req) {
+        if(req.getMaxLimit() > 100){
+            req.setMaxLimit(100);
+        }
+
+        SyncResp<ImConversationSetEntity> resp = new SyncResp<>();
+        //seq > req.getseq limit maxLimit
+        QueryWrapper<ImConversationSetEntity> queryWrapper =
+                new QueryWrapper<>();
+        queryWrapper.eq("from_id",req.getOperater());
+        queryWrapper.gt("sequence",req.getLastSequence());
+        queryWrapper.eq("app_id",req.getAppId());
+        queryWrapper.last(" limit " + req.getMaxLimit());
+        queryWrapper.orderByAsc("sequence");
+        List<ImConversationSetEntity> list = imConversationSetMapper
+                .selectList(queryWrapper);
+
+        if(!CollectionUtils.isEmpty(list)){
+            ImConversationSetEntity maxSeqEntity = list.get(list.size() - 1);
+            resp.setDataList(list);
+            //设置最大seq
+            Long friendShipMaxSeq = imConversationSetMapper.geConversationSetMaxSeq(req.getAppId(), req.getOperater());
+            resp.setMaxSequence(friendShipMaxSeq);
+            //设置是否拉取完毕
+            resp.setCompleted(maxSeqEntity.getSequence() >= friendShipMaxSeq);
+            return ResponseVO.successResponse(resp);
+        }
+
+        resp.setCompleted(true);
+        return ResponseVO.successResponse(resp);
+
+    }
 }
