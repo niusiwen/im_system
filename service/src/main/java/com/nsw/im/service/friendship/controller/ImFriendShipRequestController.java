@@ -39,6 +39,12 @@ public class ImFriendShipRequestController {
         return imFriendShipRequestService.approverFriendRequest(req);
     }
 
+    /**
+     * 获取好友请求列表
+     * @param req
+     * @param appId
+     * @return
+     */
     @RequestMapping("/getFriendRequest")
     public ResponseVO getFriendRequest(@RequestBody @Validated GetFriendShipRequestReq req, Integer appId){
         req.setAppId(appId);

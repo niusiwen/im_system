@@ -6,6 +6,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 /**
+ * @description: 记录用户seq
  * @author nsw
  * @date 2024/3/2 16:04
  */

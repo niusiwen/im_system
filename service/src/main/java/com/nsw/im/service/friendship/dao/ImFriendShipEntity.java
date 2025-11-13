@@ -32,7 +32,7 @@ public class ImFriendShipEntity {
     private Integer black;
 //    @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Long createTime;
-    /** 好友关系序列号*/
+    /** 好友关系序列号，每次好友关系变更序列号加一，每个好友单独记录序列号*/
 //    @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Long friendSequence;
 
