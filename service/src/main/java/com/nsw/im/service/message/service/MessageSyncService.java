@@ -1,16 +1,30 @@
 package com.nsw.im.service.message.service;
 
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.nsw.im.codec.pack.message.MessageReadedPack;
+import com.nsw.im.common.ResponseVO;
+import com.nsw.im.common.constant.Constants;
 import com.nsw.im.common.enums.command.Command;
 import com.nsw.im.common.enums.command.GroupEventCommand;
 import com.nsw.im.common.enums.command.MessageCommand;
+import com.nsw.im.common.model.SyncReq;
+import com.nsw.im.common.model.SyncResp;
 import com.nsw.im.common.model.message.MessageReadedContent;
 import com.nsw.im.common.model.message.MessageReceiveAckContent;
+import com.nsw.im.common.model.message.OfflineMessageContent;
 import com.nsw.im.service.conversation.service.ConversationService;
 import com.nsw.im.service.utils.MessageProducer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 消息同步
@@ -25,6 +39,9 @@ public class MessageSyncService {
 
     @Autowired
     ConversationService conversationService;
+
+    @Autowired
+    RedisTemplate redisTemplate;
 
 
     /**
@@ -94,4 +111,43 @@ public class MessageSyncService {
 
     }
 
+    /**
+     * 拉取离线消息
+     * @param req
+     * @return
+     */
+    public ResponseVO syncOfflineMessage(SyncReq req) {
+
+        SyncResp<OfflineMessageContent> resp = new SyncResp<>();
+
+        String key  = req.getAppId() + ":" + Constants.RedisConstants.OfflineMessage + ":" + req.getOperater();
+        // 1、获取离线消息中最大的seq
+        Long maxSeq = 0L;
+        ZSetOperations zSetOperations = redisTemplate.opsForZSet();
+        Set set = zSetOperations.reverseRangeWithScores(key, 0, 0);// 获取zSet中最大的值
+        if (!CollectionUtils.isEmpty(set)) {
+            List list = new ArrayList(set);
+            DefaultTypedTuple o = (DefaultTypedTuple) list.get(0);
+            maxSeq = o.getScore().longValue();
+        }
+        resp.setMaxSequence(maxSeq);
+
+        // 2、查询离线消息数据
+        List<OfflineMessageContent> respList = new ArrayList<>();
+        Set<ZSetOperations.TypedTuple> querySet = zSetOperations.rangeByScoreWithScores(key, req.getLastSequence(), maxSeq, 0, req.getMaxLimit());
+        for (ZSetOperations.TypedTuple<String> typedTuple : querySet) {
+            String value = typedTuple.getValue();
+            OfflineMessageContent offlineMessageContent = JSONObject.parseObject(value, OfflineMessageContent.class);
+            respList.add(offlineMessageContent);
+        }
+        resp.setDataList(respList);
+
+        // 3、判断是否查询完毕
+        if (!CollectionUtils.isEmpty(respList)) {
+            OfflineMessageContent offlineMessageContent = respList.get(respList.size() - 1);
+            resp.setCompleted(maxSeq <= offlineMessageContent.getMessageKey());
+        }
+
+        return ResponseVO.successResponse(resp);
+    }
 }

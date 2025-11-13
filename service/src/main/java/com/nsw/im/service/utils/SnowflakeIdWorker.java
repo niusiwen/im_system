@@ -5,9 +5,8 @@ import cn.hutool.core.date.SystemClock;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 雪花算法
- * @author: Chackylee
- * @description:
+ * @author: niusiwen
+ * @description: 雪花算法
  **/
 @Slf4j
 public class SnowflakeIdWorker {

@@ -1,8 +1,10 @@
 package com.nsw.im.service.message.controller;
 
 import com.nsw.im.common.ResponseVO;
+import com.nsw.im.common.model.SyncReq;
 import com.nsw.im.common.model.message.CheckSendMessageReq;
 import com.nsw.im.service.message.model.req.SendMessageReq;
+import com.nsw.im.service.message.service.MessageSyncService;
 import com.nsw.im.service.message.service.P2PMessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -21,6 +23,9 @@ public class MessageController {
 
     @Autowired
     P2PMessageService p2PMessageService;
+
+    @Autowired
+    MessageSyncService messageSyncService;
 
     /**
      * 使用im服务的接入方后台（管理员）使用发送用户消息接口
@@ -47,6 +52,17 @@ public class MessageController {
         return p2PMessageService.isServerPermissCheck(req.getFromId(), req.getToId(),
                 req.getAppId());
 
+    }
+
+    /**
+     * 拉取离线消息
+     * @param req
+     * @return
+     */
+    @RequestMapping("/syncOfflineMessage")
+    public ResponseVO syncOfflineMessage (@RequestBody @Validated SyncReq req, Integer appId) {
+        req.setAppId(appId);
+        return messageSyncService.syncOfflineMessage(req);
     }
 
 }
