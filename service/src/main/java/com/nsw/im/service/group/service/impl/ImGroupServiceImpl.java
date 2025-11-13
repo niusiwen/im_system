@@ -525,6 +525,12 @@ public class ImGroupServiceImpl implements ImGroupService {
         return ResponseVO.successResponse(resp);
     }
 
+    /**
+     * 获取用户群组最大的sequence
+     * @param userId
+     * @param appId
+     * @return
+     */
     @Override
     public Long getUserGroupMaxSeq(String userId, Integer appId) {
 

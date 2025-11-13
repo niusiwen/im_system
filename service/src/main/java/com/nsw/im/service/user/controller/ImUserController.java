@@ -92,6 +92,12 @@ public class ImUserController {
         return ResponseVO.errorResponse();
     }
 
+    /**
+     * 获取用户序列号Sequence的接口，用于用户登录时，判断客户端本地的Sequence和服务端是否一致
+     * @param req
+     * @param appId
+     * @return
+     */
     @RequestMapping("/getUserSequence")
     public ResponseVO getUserSequence(@RequestBody @Validated
                                               GetUserSequenceReq req, Integer appId) {

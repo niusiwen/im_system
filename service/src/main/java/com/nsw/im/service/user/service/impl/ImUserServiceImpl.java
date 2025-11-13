@@ -8,6 +8,7 @@ import com.nsw.im.common.constant.Constants;
 import com.nsw.im.common.enums.DelFlagEnum;
 import com.nsw.im.common.enums.UserErrorCode;
 import com.nsw.im.common.exception.ApplicationException;
+import com.nsw.im.service.group.service.ImGroupService;
 import com.nsw.im.service.user.dao.ImUserDataEntity;
 import com.nsw.im.service.user.dao.mapper.ImUserDataMapper;
 import com.nsw.im.service.user.model.req.*;
@@ -44,6 +45,9 @@ public class ImUserServiceImpl implements ImUserService {
 
     @Autowired
     AppConfig appConfig;
+
+    @Autowired
+    ImGroupService imGroupService;
 
     @Override
     public ResponseVO importUser(ImportUserReq req) {
@@ -193,14 +197,18 @@ public class ImUserServiceImpl implements ImUserService {
         return ResponseVO.successResponse();
     }
 
+    /**
+     * 获取用户Sequence
+     * @param req
+     * @return
+     */
     @Override
     public ResponseVO getUserSequence(GetUserSequenceReq req) {
-//        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + Constants.RedisConstants.SeqPrefix + ":" + req.getUserId());
-//        Long groupSeq = imGroupService.getUserGroupMaxSeq(req.getUserId(),req.getAppId());
-//        map.put(Constants.SeqConstants.Group,groupSeq);
-//        return ResponseVO.successResponse(map);
-
-        return ResponseVO.successResponse();
+        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + Constants.RedisConstants.SeqPrefix + ":" + req.getUserId());
+        // 群组的Sequence要从数据库中去查
+        Long groupSeq = imGroupService.getUserGroupMaxSeq(req.getUserId(),req.getAppId());
+        map.put(Constants.SeqConstants.Group,groupSeq);
+        return ResponseVO.successResponse(map);
     }
 
 }
