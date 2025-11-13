@@ -619,6 +619,12 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         return ResponseVO.successResponse();
     }
 
+    /**
+     * 查询已加入的群组
+     * @param operater
+     * @param appId
+     * @return 群id列表
+     */
     @Override
     public ResponseVO<Collection<String>> syncMemberJoinedGroup(String operater, Integer appId) {
         return ResponseVO.successResponse(imGroupMemberMapper.syncJoinedGroupId(appId,operater,GroupMemberRoleEnum.LEAVE.getCode()));

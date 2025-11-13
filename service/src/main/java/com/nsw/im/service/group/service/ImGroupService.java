@@ -1,6 +1,7 @@
 package com.nsw.im.service.group.service;
 
 import com.nsw.im.common.ResponseVO;
+import com.nsw.im.common.model.SyncReq;
 import com.nsw.im.service.group.dao.ImGroupEntity;
 import com.nsw.im.service.group.model.req.*;
 
@@ -28,7 +29,7 @@ public interface ImGroupService {
 
     public ResponseVO muteGroup(MuteGroupReq req);
 
-//    ResponseVO syncJoinedGroupList(SyncReq req);
+    ResponseVO syncJoinedGroupList(SyncReq req);
 
     Long getUserGroupMaxSeq(String userId, Integer appId);
 }

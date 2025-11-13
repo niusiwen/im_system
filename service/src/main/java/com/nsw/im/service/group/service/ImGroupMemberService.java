@@ -66,5 +66,11 @@ public interface ImGroupMemberService {
      */
     public ResponseVO speak(SpeaMemberReq req);
 
+    /**
+     * 查询已加入的群组
+     * @param operater
+     * @param appId
+     * @return
+     */
     ResponseVO<Collection<String>> syncMemberJoinedGroup(String operater, Integer appId);
 }

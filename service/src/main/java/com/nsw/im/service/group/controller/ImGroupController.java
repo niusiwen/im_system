@@ -1,6 +1,7 @@
 package com.nsw.im.service.group.controller;
 
 import com.nsw.im.common.ResponseVO;
+import com.nsw.im.common.model.SyncReq;
 import com.nsw.im.service.group.model.req.*;
 import com.nsw.im.service.group.service.GroupMessageService;
 import com.nsw.im.service.group.service.ImGroupService;
@@ -52,6 +53,13 @@ public class ImGroupController {
         return groupService.updateBaseGroupInfo(req);
     }
 
+    /**
+     * 获取用户加入的群组
+     * @param req
+     * @param appId
+     * @param identifier
+     * @return
+     */
     @RequestMapping("/getJoinedGroup")
     public ResponseVO getJoinedGroup(@RequestBody @Validated GetJoinedGroupReq req, Integer appId, String identifier)  {
         req.setAppId(appId);
@@ -90,10 +98,17 @@ public class ImGroupController {
         return ResponseVO.successResponse(groupMessageService.send(req));
     }
 
-//    @RequestMapping("/syncJoinedGroup")
-//    public ResponseVO syncJoinedGroup(@RequestBody @Validated SyncReq req, Integer appId, String identifier)  {
-//        req.setAppId(appId);
-//        return groupService.syncJoinedGroupList(req);
-//    }
+    /**
+     * 增量同步加入的群组数据
+     * @param req
+     * @param appId
+     * @param identifier
+     * @return
+     */
+    @RequestMapping("/syncJoinedGroup")
+    public ResponseVO syncJoinedGroup(@RequestBody @Validated SyncReq req, Integer appId, String identifier)  {
+        req.setAppId(appId);
+        return groupService.syncJoinedGroupList(req);
+    }
 
 }
